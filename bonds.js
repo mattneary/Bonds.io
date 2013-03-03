@@ -1,10 +1,3 @@
-var test;
-if( !document ) {
-	test = require('./test');
-} else {
-	test = { assert: function(){} };
-}
-
 // Utilities
 var constant = function(x) { return function() { return x; }; };
 var identity = function(x) { return x; };
@@ -286,7 +279,6 @@ Tree.prototype = {
 			this.currentLineStart = [x,y]; 
 		},
 		lineTo: function(ctx, x,y, shift) {
-			console.log("to", x,y, this.currentLineStart);
 			ctx.lineTo(30*(x+7),30*(y+5)+shift*2);
 			this.points.push({ type: "line", points: [this.currentLineStart, [x,y]] });
 		},
@@ -346,166 +338,22 @@ Tree.prototype = {
 	}
 };
 
-test.assert("Construction of molecules", function() {
-	var atom = new Atom("O", 6);
-	var molecule = new Molecule([atom]);
-	return -1 != molecule.atoms.indexOf(atom);
-});
-
-test.assert("O is origin of H2O", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-	var molecule = new Molecule([h, h, o]);
-	return molecule.isOrigin(o);
-});
-
-test.assert("H2O has an origin", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-	var molecule = new Molecule([h, h, o]);
-	return molecule.hasOrigin() == "O";
-});
-
-test.assert("Cross product of two permutations", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-
-	var hs = permutations(h, 2),
-		os = permutations(o, 2);
-	var cross = crossProduct(hs, os).reduce(concat).map(reducer(concat));
-	return flatEqual(cross.map(mapper(attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
-});
-
-test.assert("Combining of multiple repeat elements", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-
-	var permute = [[h,2], [o, 2]].map(permutations.apply.bind(permutations, {})).reduce(combinations);
-	return flatEqual(permute.map(mapper(attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
-});
-
-test.assert("Molecule summary", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-
-	var molecule = new Molecule([h, h, o]);
-	return flatEqual(listConstituents(molecule.atoms).map(attr(1)), [2, 1]);
-});
-
-test.assert("Sub-molecules", function() {
-	var h = new Atom("H", 7),
-		o = new Atom("O", 6);
-
-	var molecule = new Molecule([h, h, o, o]);
-	return flatEqual(molecule.subMolecules().map(function(mol){return mol.clean(1)}), [[6,6],[6,6,7],[6,6,7,7],[6,7],[6,7,7],[7,7]]);	
-});
-
-test.assert("Recognize R1, R2, and R3 neutralizable molecules", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var R1 = new Molecule([c,h,h,h]);
-	var R2 = new Molecule([c,h,h]);
-	var R3 = new Molecule([c,h]);
-	return R1.R1Neutralizable() == "C" &&
-			R2.R2Neutralizable() == "C" &&
-			R2.R2Neutralizable() == "C";
-});
-
-test.assert("Find R1, R2, and R3 neutralizable sub-molecules", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var molecule = new Molecule([c,c,h,h,h,h]);
-	
-	return flatEqual(molecule.R2Groups().map(function(group){ return group.R2Neutralizable(); }), ["R","C"]);
-});
-
-test.assert("Branch solving of molecule", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var molecule = new Molecule([c,c,h,h,h,h]);
-	
-	var solve;
-	molecule.branchSolve(function(summary) {
-		solve = summary;
-	});
-	return flatEqual(solve, [['H,1,0','C,1,0','1'],
-	 ['H,1,1','C,1,0','1'],
-	 ['H,0,0','C,0,2','1'],
-	 ['H,0,1','C,0,2','1'],
-	 ['C,0,2','C,1,0','2']]);
-});
-
-test.assert("Organic chemistry", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var molecule = new Molecule([c,c,c,c,c,c,h,h,h,h,h,h,h,h,h,h,h,h,h,h]);
-	
-	var solve;
-	molecule.branchSolve(function(summary) {
-		solve = summary;
-	});
-	return flatEqual(solve, [['H,5,0','C,5,0','1'],
-	 ['H,5,1','C,5,0','1'],
-	 ['H,5,2','C,5,0','1'],
-	 ['H,0,0','C,0,3','1'],
-	 ['H,0,1','C,0,3','1'],
-	 ['H,0,2','C,0,3','1'],
-	 ['C,0,3','C,1,3','1'],
-	 ['H,1,1','C,1,3','1'],
-	 ['H,1,2','C,1,3','1'],
-	 ['C,1,3','C,2,3','1'],
-	 ['H,2,1','C,2,3','1'],
-	 ['H,2,2','C,2,3','1'],
-	 ['C,2,3','C,3,1','1'],
-	 ['H,3,1','C,3,1','1'],
-	 ['H,3,2','C,3,1','1'],
-	 ['C,3,1','C,4,3','1'],
-	 ['H,4,1','C,4,3','1'],
-	 ['H,4,2','C,4,3','1'],
-	 ['C,4,3','C,5,0','1']]);
-});
-
-test.assert("Coordinates from bonds", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var molecule = new Molecule([c,h,h,h,h]);
-	
-	var solve;
-	molecule.branchSolve(function(summary) {
-		solve = summary;
-	});
-	
-	var tree = new Tree(solve);
-	return flatEqual(tree.bondLines(), [{ from:[0,0], to:[1,0], bonds:"1"},
-	{ from:[1,0], to:[1,-1], bonds:"1"},
-	{ from:[1,0], to:[2,0], bonds:"1"},
-	{ from:[1,0], to:[1,1], bonds:"1"}]);
-});
-
-test.assert("Plotting of bonds and atoms", function() {
-	var c = new Atom("C", 4),
-		h = new Atom("H", 7);
-
-	var molecule = new Molecule([c,h,h,h,h]);
-	
-	var solve;
-	molecule.branchSolve(function(summary) {
-		solve = summary;
-	});
-	
-	var tree = new Tree(solve);
-	return flatEqual(tree.draw(), [{type:"line", points:[[0,0]]},
-	{type:"line", points:[[1,0]]},
-	{type:"line", points:[[1,0]]},
-	{type:"line", points:[[1,0]]},
-	{type:"circle", points:[0,0]},
-	{type:"circle", points:[1,0]},
-	{type:"circle", points:[1,-1]},
-	{type:"circle", points:[2,0]},
-	{type:"circle", points:[1,1]}]);
-});
+// Export if used as a Node.js module
+var doc;
+try { doc = document; } catch(err) { doc = false; }
+if( !doc ) {
+	exports.Atom = Atom;
+	exports.Molecule = Molecule;
+	exports.Tree = Tree;
+	exports.utils = {
+		permutations: permutations,
+		combinations: combinations,
+		flatEqual: flatEqual,
+		crossProduct: crossProduct,
+		concat: concat,
+		reducer: reducer,
+		attr: attr,
+		mapper: mapper,
+		listConstituents: listConstituents
+	};
+}
