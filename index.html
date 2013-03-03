@@ -1,0 +1,24 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<title>Bonds.io</title>
+	</head>
+	<body>
+		<canvas id="cvs" width="600" height="600"></canvas>
+		<script src="bonds.js"></script>
+		<script>
+			var c = new Atom("C", 4),
+				h = new Atom("H", 7);
+		
+			var molecule = new Molecule([c,c,h,h,h,h,c,c,h,h,h,h,c,c,h,h,h,h,h,h]);
+			
+			var solve;
+			molecule.branchSolve(function(summary) {
+				solve = summary;
+			});
+			
+			var tree = new Tree(solve);
+			tree.draw();
+		</script>
+	</body>
+</html>
