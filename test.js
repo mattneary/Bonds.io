@@ -51,6 +51,8 @@ var assert = function(assertion, fn) {
 	
 		var hs = utils.permutations(h, 2),
 			os = utils.permutations(o, 2);
+			
+		// take crossProduct and flatten result
 		var cross = utils.crossProduct(hs, os).reduce(utils.concat).map(utils.reducer(utils.concat));
 		return utils.flatEqual(cross.map(utils.mapper(utils.attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
 	});
@@ -59,6 +61,7 @@ var assert = function(assertion, fn) {
 		var h = new Atom("H", 7),
 			o = new Atom("O", 6);
 	
+		// map to permutations and reduce with combinations
 		var permute = [[h,2], [o, 2]].map(utils.permutations.apply.bind(utils.permutations, {})).reduce(utils.combinations);
 		return utils.flatEqual(permute.map(utils.mapper(utils.attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
 	});
@@ -76,7 +79,7 @@ var assert = function(assertion, fn) {
 			o = new Atom("O", 6);
 	
 		var molecule = new Molecule([h, h, o, o]);
-		return utils.flatEqual(molecule.subMolecules().map(function(mol){return mol.clean(1)}), [[6,6],[6,6,7],[6,6,7,7],[6,7],[6,7,7],[7,7]]);	
+		return utils.flatEqual(molecule.subMolecules().map(utils.chain(utils.mapper(utils.attr("number")), utils.attr("atoms"))), [[6,6],[6,6,7],[6,6,7,7],[6,7],[6,7,7],[7,7]]);
 	});
 	
 	assert("Recognize R1, R2, and R3 neutralizable molecules", function() {

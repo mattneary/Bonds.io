@@ -354,6 +354,7 @@ try {
 		reducer: reducer,
 		attr: attr,
 		mapper: mapper,
-		listConstituents: listConstituents
+		listConstituents: listConstituents,
+		chain: chain
 	};
 }
