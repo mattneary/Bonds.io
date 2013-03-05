@@ -307,10 +307,10 @@ Tree.prototype = {
 				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1);
 				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1);
 			} else if( bond.bonds == '3' ) {
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1);
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1);
+				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1.5);
+				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1.5);
+				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1.5);
+				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1.5);
 				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 0);
 				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 0);
 			} else {
