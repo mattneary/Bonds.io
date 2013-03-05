@@ -18,9 +18,9 @@ var assert = function(assertion, fn) {
 	timer.start();
 	var resp = fn();
 	if( resp !== true ) {
-		console.error("Assertion failed: ", assertion, JSON.stringify(resp));
+		console.error("\x1B[31mFailed\x1B[39m `"+assertion+"`!", JSON.stringify(resp));
 	} else {
-		console.log("`"+assertion+"` passed in "+timer.end()+" ms.");
+		console.log("\x1B[32mPassed\x1B[39m `"+assertion+"` in "+timer.end()+" ms.");
 	}
 };
 
