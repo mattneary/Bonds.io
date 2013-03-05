@@ -9,9 +9,10 @@
 		<script>
 			var c = new Atom("C", 4),
 				h = new Atom("H", 7),
-				n = new Atom("N", 5);
+				n = new Atom("N", 5),
+				o = new Atom("O", 6);
 		
-			var molecule = new Molecule([n,n]);
+			var molecule = new Molecule([c,c,o,o]);
 			
 			var solve;
 			molecule.branchSolve(function(summary) {

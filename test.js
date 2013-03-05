@@ -4,12 +4,23 @@ var bonds = require('./bonds'),
 	Tree = bonds.Tree,
 	utils = bonds.utils;
 	
-assert = function(assertion, fn) {
+var Timer = function() {
+	var startTime;
+	this.start = function() {
+		startTime = new Date().getTime();
+	};
+	this.end = function() {
+		return new Date().getTime() - startTime;
+	};
+};
+var timer = new Timer();
+var assert = function(assertion, fn) {
+	timer.start();
 	var resp = fn();
 	if( resp !== true ) {
 		console.error("Assertion failed: ", assertion, JSON.stringify(resp));
 	} else {
-		console.log("Assertion Passed");
+		console.log("`"+assertion+"` passed in "+timer.end()+" ms.");
 	}
 };
 
