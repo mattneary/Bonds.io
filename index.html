@@ -8,9 +8,10 @@
 		<script src="bonds.js"></script>
 		<script>
 			var c = new Atom("C", 4),
-				h = new Atom("H", 7);
+				h = new Atom("H", 7),
+				n = new Atom("N", 5);
 		
-			var molecule = new Molecule([c,c,h,h,h,h,c,c,h,h,h,h,c,c,h,h,h,h,h,h]);
+			var molecule = new Molecule([n,n]);
 			
 			var solve;
 			molecule.branchSolve(function(summary) {
@@ -18,7 +19,7 @@
 			});
 			
 			var tree = new Tree(solve);
-			tree.draw();
+			tree.draw(document.getElementById('cvs').getContext('2d'));
 		</script>
 	</body>
 </html>

@@ -287,24 +287,9 @@ Tree.prototype = {
 			this.points.push({ type: "circle", points: [x,y] }); 
 		}
 	},
-	draw: function() {
-		var doc, canvas, ctx, tree = this;
-		this.context.points = [];
-		try { doc = document; } catch( err ) { doc = {}; };
-		if( doc.getElementById ) {
-			canvas = doc.getElementById('cvs');
-			ctx = canvas.getContext('2d');
-		} else {
-			ctx = { 
-				moveTo: function(){}, 
-				lineTo: function(){}, 
-				arc: function(){},
-				closePath: function(){},
-				beginPath: function(){},
-				stroke: function(){},
-				fill: function(){}
-			};
-		}
+	draw: function(ctx) {
+		var tree = this;
+		this.context.points = [];		
 		
 		this.bondLines().forEach(function(bond) {
 			ctx.beginPath();		
@@ -316,6 +301,13 @@ Tree.prototype = {
 				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1);
 				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1);
 				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1);
+			} else if( bond.bonds == '3' ) {
+				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1);
+				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1);
+				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1);
+				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1);
+				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 0);
+				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 0);
 			} else {
 				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 0);
 				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 0);
@@ -338,10 +330,11 @@ Tree.prototype = {
 	}
 };
 
+
 // Export if used as a Node.js module
-var doc;
-try { doc = document; } catch(err) { doc = false; }
-if( !doc ) {
+try { 
+	document; 
+} catch(err) { 
 	exports.Atom = Atom;
 	exports.Molecule = Molecule;
 	exports.Tree = Tree;

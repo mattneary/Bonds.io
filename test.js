@@ -99,11 +99,16 @@ assert = function(assertion, fn) {
 		molecule.branchSolve(function(summary) {
 			solve = summary;
 		});
-		return utils.flatEqual(solve, [['H,1,0','C,1,0','1'],
-		 ['H,1,1','C,1,0','1'],
-		 ['H,0,0','C,0,2','1'],
-		 ['H,0,1','C,0,2','1'],
-		 ['C,0,2','C,1,0','2']]);
+		
+		var ch = solve.filter(function(bond) {
+			return (bond[0][0] == 'C' && bond[1][0] == 'H') || (bond[1][0] == 'C' && bond[0][0] == 'H');
+		});
+		var cc = solve.filter(function(bond) {
+			return (bond[0][0] == 'C' && bond[1][0] == 'C');
+		});
+		
+		// verify number of bonds of each type
+		return ch.length == 4 && cc.length == 1;
 	});
 	
 	assert("Organic chemistry", function() {
@@ -116,43 +121,16 @@ assert = function(assertion, fn) {
 		molecule.branchSolve(function(summary) {
 			solve = summary;
 		});
-		return utils.flatEqual(solve, [['H,5,0','C,5,0','1'],
-		 ['H,5,1','C,5,0','1'],
-		 ['H,5,2','C,5,0','1'],
-		 ['H,0,0','C,0,3','1'],
-		 ['H,0,1','C,0,3','1'],
-		 ['H,0,2','C,0,3','1'],
-		 ['C,0,3','C,1,3','1'],
-		 ['H,1,1','C,1,3','1'],
-		 ['H,1,2','C,1,3','1'],
-		 ['C,1,3','C,2,3','1'],
-		 ['H,2,1','C,2,3','1'],
-		 ['H,2,2','C,2,3','1'],
-		 ['C,2,3','C,3,1','1'],
-		 ['H,3,1','C,3,1','1'],
-		 ['H,3,2','C,3,1','1'],
-		 ['C,3,1','C,4,3','1'],
-		 ['H,4,1','C,4,3','1'],
-		 ['H,4,2','C,4,3','1'],
-		 ['C,4,3','C,5,0','1']]);
-	});
-	
-	assert("Coordinates from bonds", function() {
-		var c = new Atom("C", 4),
-			h = new Atom("H", 7);
-	
-		var molecule = new Molecule([c,h,h,h,h]);
 		
-		var solve;
-		molecule.branchSolve(function(summary) {
-			solve = summary;
+		var ch = solve.filter(function(bond) {
+			return (bond[0][0] == 'C' && bond[1][0] == 'H') || (bond[1][0] == 'C' && bond[0][0] == 'H');
+		});
+		var cc = solve.filter(function(bond) {
+			return (bond[0][0] == 'C' && bond[1][0] == 'C');
 		});
 		
-		var tree = new Tree(solve);
-		return utils.flatEqual(tree.bondLines(), [{ from:[0,0], to:[1,0], bonds:"1"},
-		{ from:[1,0], to:[1,-1], bonds:"1"},
-		{ from:[1,0], to:[2,0], bonds:"1"},
-		{ from:[1,0], to:[1,1], bonds:"1"}]);
+		// verify number of bonds of each type
+		return ch.length == 14 && cc.length == 5;
 	});
 	
 	assert("Plotting of bonds and atoms", function() {
@@ -167,14 +145,25 @@ assert = function(assertion, fn) {
 		});
 		
 		var tree = new Tree(solve);
-		return utils.flatEqual(tree.draw(), [{type: "line", points: [[0,0],[1,0]]},
-		{type: "line", points: [[1,0],[1,-1]]},
-		{type: "line", points: [[1,0],[2,0]]},
-		{type: "line", points: [[1,0],[1,1]]},
-		{type: "circle", points: [0,0]},
-		{type: "circle", points: [1,0]},
-		{type: "circle", points: [1,-1]},
-		{type: "circle", points: [2,0]},
-		{type: "circle", points: [1,1]}]);
+		var coords = tree.coordinates();
+		
+		var elemOfCoord = function(coord) {
+			for( var k in coords ) if( utils.flatEqual(coord, coords[k]) ) return k;
+			return "";
+		};
+		
+		var fn = function(){};
+		var shapes = tree.draw({ moveTo: fn, lineTo: fn, arc: fn, beginPath: fn, closePath: fn, stroke: fn, fill: fn }),
+			bonds = [];			
+		shapes.forEach(function(shape) {
+			if( shape.type == "line" ) { bonds.push(shape.points.map(elemOfCoord)); }
+		});
+				
+		// make sure all bonds drawn are as calculated
+		return solve.filter(function(bond) {
+			return bonds.filter(function(drawnBond) {
+				return (drawnBond[0] == bond[0] && drawnBond[1] == bond[1]) || (drawnBond[0] == bond[1] && drawnBond[1] == bond[0]);
+			}).length == 0;
+		}).length == 0;
 	});
 })();
