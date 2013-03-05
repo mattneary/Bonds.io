@@ -54,10 +54,15 @@ Molecule.prototype = {
 	clean: function(mode) {
 		return this.atoms.filter(chain(whereNot(/^R[0-9]/), attr("name"))).map(attr(mode==1?"number":"name"));
 	},
-	output: function(center) {
+	output: function(center, subMolIndex) {
+		subMolIndex = subMolIndex || 0;
+		var subMolCount = 0;
 		return this.atoms.map(function(atom, index) {	
-			if( atom.subMol ) return atom.subMol.output(atom.subMolCenter)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
-			return ""+atom.name+","+getLevel(center)+","+index+"-"+center+"-"+(8-atom.number);
+			if( atom.subMol ) {
+				subMolCount++;
+				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
+			}
+			return ""+atom.name+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
 		}).join(";");
 	},
 	isOrigin: function(atom) {
@@ -129,7 +134,7 @@ Molecule.prototype = {
 				originIndex = R1Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R1Group.atoms.filter(function(_,i){return i!=originIndex});
 
-			atoms.push({ name: "R1|"+depth, number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,originIndex], bondCount: 1 });
+			atoms.push({ name: "R1|"+depth, number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 1 });
 			var molecule = new Molecule(atoms.filter(identity));					
 			molecule.branchSolve(cb, depth+1);
 			subcount++;
@@ -149,7 +154,7 @@ Molecule.prototype = {
 				originIndex = R2Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R2Group.atoms.filter(function(_,i){return i!=originIndex});
 							
-			atoms.push({ name: "R2|"+depth, number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,originIndex], bondCount: 2 });
+			atoms.push({ name: "R2|"+depth, number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 2 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
@@ -170,7 +175,7 @@ Molecule.prototype = {
 				originIndex = R3Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R3Group.atoms.filter(function(_,i){return i!=originIndex});
 			
-			atoms.push({ name: "R3|"+depth, number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,originIndex], bondCount: 3 });
+			atoms.push({ name: "R3|"+depth, number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 3 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
