@@ -3,7 +3,6 @@ var constant = function(x) { return function() { return x; }; };
 var identity = function(x) { return x; };
 
 // functional forms of basic operators
-var notEqual = function(a) { return function(elm) {return elm!=a} };
 var add = function(a, b) { return a+b; };
 var gt = function(a, b) { return a>b; };
 var concat = function(a, b) { return b.concat(a); };
@@ -37,8 +36,6 @@ var listConstituents = function(list) {
 		return [a, list.length - list.slice().reverse().indexOf(a) - list.indexOf(a)]; 
 	});
 };
-var renderBond = function(num) { return num==1?"-":(num==2?"=":"≡") };
-var getElem = function(center) { return center.match(/[a-zA-Z]+/) ? center.match(/[a-zA-Z]+/)[0] : ""; };
 var getLevel = function(center) { return center.match(/[0-9]+/) ? center.match(/[0-9]+/)[0] : ""; };
 
 // Classes
