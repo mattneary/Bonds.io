@@ -36,6 +36,8 @@ var listConstituents = function(list) {
 		return [a, list.length - list.slice().reverse().indexOf(a) - list.indexOf(a)]; 
 	});
 };
+
+// Atom name parser
 var getLevel = function(center) { return center.match(/[0-9]+/) ? center.match(/[0-9]+/)[0] : ""; };
 
 // Classes
@@ -48,10 +50,13 @@ var Molecule = function(atoms) {
 	this.atoms = atoms;
 };
 Molecule.prototype = {
-	clean: function(mode) {
-		return this.atoms.filter(chain(whereNot(/^R[0-9]/), attr("name"))).map(attr(mode==1?"number":"name"));
-	},
 	output: function(center, subMolIndex) {
+		// Recursively generates a list of the form:
+		/*
+			H,0,0,0-C,0,0,1-1;H,0,0,2-C,0,0,3-1;
+		*/
+		// Then splits at `;` and splits at `-` to bear a...
+		// ... two-dimensional array.
 		subMolIndex = subMolIndex || 0;
 		var subMolCount = 0;
 		return this.atoms.map(function(atom, index) {	
