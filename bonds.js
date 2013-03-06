@@ -42,6 +42,15 @@ var getLevel = function(center) { return center.match(/[0-9]+/) ? center.match(/
 
 // Classes
 var solved = false;
+var Context = function() {
+	// useless class used that allows tests to be run...
+	// ... without a canvas element
+	var context = this;
+	var fns = ["moveTo", "lineTo", "arc", "beginPath", "closePath", "stroke", "fill", "fillText"];
+	fns.forEach(function(fn) {
+		context[fn] = function(){};
+	});
+};
 var Atom = function(label, ve) {
 	this.name = label;
 	this.number = ve;
@@ -53,7 +62,7 @@ Molecule.prototype = {
 	output: function(center, subMolIndex) {
 		// Recursively generates a list of the form:
 		/*
-			H,0,0,0-C,0,0,1-1;H,0,0,2-C,0,0,3-1;
+			H,#7,0,0,0-C,#4,0,0,1-1;H,#7,0,0,2-C,#4,0,0,3-1;
 		*/
 		// Then splits at `;` and splits at `-` to bear a...
 		// ... two-dimensional array.
@@ -361,6 +370,7 @@ try {
 	exports.Atom = Atom;
 	exports.Molecule = Molecule;
 	exports.Tree = Tree;
+	exports.Context = Context;
 	exports.utils = {
 		permutations: permutations,
 		combinations: combinations,
