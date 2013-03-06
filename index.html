@@ -7,15 +7,8 @@
 		<canvas id="cvs" width="600" height="600"></canvas>
 		<script src="bonds.js"></script>
 		<script>
-			var c = new Atom("C", 4),
-				h = new Atom("H", 7),
-				n = new Atom("N", 5),
-				o = new Atom("O", 6);
-		
-			var repeat = function(x, n) {
-				return Array(n).join(0).split(0).map(constant(x));
-			};
-			var molecule = new Molecule(repeat(c, 6).concat(repeat(h, 14)));
+			var formula = new Formula("C6H12");
+			var molecule = new Molecule(formula.atoms());
 			
 			var solve;
 			molecule.branchSolve(function(summary) {

@@ -1,6 +1,7 @@
 var bonds = require('./bonds'),
 	Atom = bonds.Atom,
 	Molecule = bonds.Molecule,
+	Formula = bonds.Formula,
 	Context = bonds.Context,
 	Tree = bonds.Tree,
 	utils = bonds.utils;
@@ -179,5 +180,14 @@ var assert = function(assertion, fn) {
 				return (drawnBond[0] == bond[0] && drawnBond[1] == bond[1]) || (drawnBond[0] == bond[1] && drawnBond[1] == bond[0]);
 			}).length == 0;
 		}).length == 0;
+	});
+	
+	assert("Build a molecule from formula", function() {
+		var atoms = new Formula("C6H12O6").atoms();
+		
+		var cs = atoms.map(utils.attr("name")).filter(utils.isEqual("C")),
+			hs = atoms.map(utils.attr("name")).filter(utils.isEqual("H")),
+			os = atoms.map(utils.attr("name")).filter(utils.isEqual("O"));
+		return cs.length == 6 && hs.length == 12 && os.length == 6;
 	});
 })();

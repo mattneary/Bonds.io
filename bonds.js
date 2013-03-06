@@ -17,7 +17,7 @@ var range = function(length) { return list(length).map(function(_,n){return n;})
 var unique = function(a,b) { return a.map?(a.indexOf(b)!=-1 ? a : a.concat(b)):(a==b?[a]:[a,b]) }
 var arrayize = function(x) { return x.map ? x : [x]; };
 var zip = function(a) { return function(b) { return [a,b] }; };
-var whereNot = function(regexp) { return function(elm) { return !elm.match(regexp) }; }
+var isEqual = function(a) { return function(b) { return a==b; } };
 
 // two-dimensional array helpers
 var mapper = function(fn) { return function(elm) { return elm.map(fn); }; };
@@ -86,7 +86,10 @@ Molecule.prototype = {
 					.reduce(add, 0);
 	},
 	hasOrigin: function() {
-		return this.atoms.filter(this.isOrigin.bind(this)).map(attr("name"))[0]
+		var mol = this;
+		return this.atoms.filter(function(atom) {
+			return mol.isOrigin(atom);
+		}).map(attr("name"))[0]
 	},
 	subMolecules: function() {
 		var permute = listConstituents(this.atoms).map(permutations.apply.bind(permutations, {}));
@@ -370,11 +373,48 @@ Tree.prototype = {
 			
 			tree.context.arc(ctx, xy[0], xy[1]);			
 			ctx.fill();
+			ctx.lineWidth = 2;
+			ctx.stroke();
 						
 			ctx.fillStyle = '#000';						
 			tree.context.fillText(ctx, element, xy[0], xy[1]);			
 		}
 		return this.context.points;
+	}
+};
+var Formula = function(formula) {
+	var elements = [["H", "He"],["Li", "Be", "B", "C", "N", "O", "F", "Ne"], ["Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"], ["K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr"], ["Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe"], ["Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn"]];
+	var ve = [
+		[7,										  								8],
+		[1,2,														  3,4,5,6,7,8],
+		[1,2,														  3,4,5,6,7,8],
+		[1,2, 								  2,2,2, 2,2,2, 2,2,2, 2, 3,4,5,6,7,8],
+		[1,2, 								  2,2,2, 2,2,2, 2,2,2, 2, 3,4,5,6,7,8],
+		[1,2, 2,2,2, 2,2,2, 2,2,2, 2,2,2, 2,2,2, 2,2,2, 2,2,2, 2,2,2, 3,4,5,6,7,8]];
+	
+	var atoms = {};
+	elements.forEach(function(row, i) {
+		row.forEach(function(elm, j) {
+			atoms[elm] = new Atom(elm, ve[i][j]);
+		});
+	});
+	this.namedAtom = atoms;
+	
+	this.formula = formula;	
+};
+Formula.prototype = {
+	repeat: function(x, n) {
+		return list(n).map(constant(x));
+	},
+	atoms: function() {
+		var formula = this;
+		var parts = this.formula.match(/[A-Z][a-z]?([0-9]+)?/g),
+			atoms = parts.map(function(elm) {
+				var nums = elm.match(/[0-9]+/),
+					number = nums?parseInt(nums[0]):1;
+				return formula.repeat(elm.match(/[A-Z][a-z]?/)[0], number);
+			}).reduce(concat);
+		return atoms.map(function(elm) { return formula.namedAtom[elm]; });
 	}
 };
 
@@ -387,6 +427,7 @@ try {
 	exports.Molecule = Molecule;
 	exports.Tree = Tree;
 	exports.Context = Context;
+	exports.Formula = Formula;
 	exports.utils = {
 		permutations: permutations,
 		combinations: combinations,
@@ -397,6 +438,7 @@ try {
 		attr: attr,
 		mapper: mapper,
 		listConstituents: listConstituents,
-		chain: chain
+		chain: chain,
+		isEqual: isEqual
 	};
 }
