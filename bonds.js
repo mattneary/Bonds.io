@@ -38,7 +38,7 @@ var listConstituents = function(list) {
 };
 
 // Atom name parser
-var getLevel = function(center) { return center.match(/[0-9]+/) ? center.match(/[0-9]+/)[0] : ""; };
+var getLevel = function(center) { return center.match(/[0-9]+/) ? center.match(/[0-9]+/g)[1] : ""; };
 
 // Classes
 var solved = false;
@@ -73,7 +73,7 @@ Molecule.prototype = {
 				subMolCount++;
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
-			return ""+atom.name+",#"+atom.number+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
+			return atom.name+",#"+atom.number+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
 		}).join(";");
 	},
 	isOrigin: function(atom) {
@@ -204,8 +204,6 @@ var Tree = function(bonds) {
 			to: bond[1],
 			bonds: bond[2]
 		};
-	}).sort(function(a, b) {
-		return a.from.match(/C/)?(b.from.match(/C/)?false:true):false;
 	});		
 };
 Tree.prototype = {

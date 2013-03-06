@@ -12,7 +12,10 @@
 				n = new Atom("N", 5),
 				o = new Atom("O", 6);
 		
-			var molecule = new Molecule([o,o,o,o,h,h]);
+			var repeat = function(x, n) {
+				return Array(n).join(0).split(0).map(constant(x));
+			};
+			var molecule = new Molecule(repeat(c, 6).concat(repeat(h, 14)));
 			
 			var solve;
 			molecule.branchSolve(function(summary) {
