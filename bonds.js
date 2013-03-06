@@ -64,7 +64,7 @@ Molecule.prototype = {
 				subMolCount++;
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
-			return ""+atom.name+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
+			return ""+atom.name+",#"+atom.number+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
 		}).join(";");
 	},
 	isOrigin: function(atom) {
@@ -113,7 +113,7 @@ Molecule.prototype = {
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
 				 			
-			cb(molecule.output(""+[this.hasOrigin(),depth,this.atoms.map(attr("name")).indexOf(this.hasOrigin())]).split(';').map(function(pair) {
+			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
 			})); 
 			solved = true;
@@ -136,7 +136,7 @@ Molecule.prototype = {
 				originIndex = R1Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R1Group.atoms.filter(function(_,i){return i!=originIndex});
 
-			atoms.push({ name: "R1|"+depth, number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 1 });
+			atoms.push({ name: "R1|"+depth, number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#7",depth,0,originIndex], bondCount: 1 });
 			var molecule = new Molecule(atoms.filter(identity));					
 			molecule.branchSolve(cb, depth+1);
 			subcount++;
@@ -156,7 +156,7 @@ Molecule.prototype = {
 				originIndex = R2Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R2Group.atoms.filter(function(_,i){return i!=originIndex});
 							
-			atoms.push({ name: "R2|"+depth, number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 2 });
+			atoms.push({ name: "R2|"+depth, number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#6",depth,0,originIndex], bondCount: 2 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
@@ -177,7 +177,7 @@ Molecule.prototype = {
 				originIndex = R3Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R3Group.atoms.filter(function(_,i){return i!=originIndex});
 			
-			atoms.push({ name: "R3|"+depth, number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,depth,0,originIndex], bondCount: 3 });
+			atoms.push({ name: "R3|"+depth, number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#5",depth,0,originIndex], bondCount: 3 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
@@ -292,6 +292,9 @@ Tree.prototype = {
 		arc: function(ctx, x,y,r,a1,a2) { 
 			ctx.arc(30*(x+7),30*(y+5),r,a1,a2);
 			this.points.push({ type: "circle", points: [x,y] }); 
+		},
+		fillText: function(ctx, txt, x,y) {
+			ctx.fillText(txt, 30*(x+7)-5,30*(y+5)+5);
 		}
 	},
 	draw: function(ctx) {
@@ -301,7 +304,7 @@ Tree.prototype = {
 		this.bondLines().forEach(function(bond) {
 			ctx.beginPath();		
 			ctx.strokeStyle = 'black';
-			if( bond.CtoC ) ctx.strokeStyle = 'blue';
+			if( bond.CtoC ) ctx.strokeStyle = 'blue';						
 			
 			if( bond.bonds == '2' ) {
 				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1);
@@ -325,13 +328,17 @@ Tree.prototype = {
 		var coordinates = this.coordinates();
 		for(var k in coordinates) {
 			var xy = coordinates[k];
+			var element = k.match(/^[a-zA-Z]+/)[0],
+				number = k.match(/#[0-9]/)[0].substr(1)-0;
 			ctx.beginPath();
-			if( k.match(/C/) ) ctx.fillStyle = 'red';
-			else { ctx.fillStyle = 'black'; }
+			ctx.fillStyle = ["#0f0", "#f00", "#00f", "#666"][7-number];
 			
-			tree.context.arc(ctx, xy[0], xy[1], 10, 0, 2*Math.PI);
-			
+			tree.context.arc(ctx, xy[0], xy[1], 10, 0, 2*Math.PI);			
 			ctx.fill();
+						
+			ctx.fillStyle = '#000';			
+			ctx.font = "bold 16px Arial";			
+			tree.context.fillText(ctx, element, xy[0], xy[1]);			
 		}
 		return this.context.points;
 	}

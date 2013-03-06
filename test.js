@@ -167,7 +167,11 @@ var assert = function(assertion, fn) {
 		};
 		
 		var fn = function(){};
-		var shapes = tree.draw({ moveTo: fn, lineTo: fn, arc: fn, beginPath: fn, closePath: fn, stroke: fn, fill: fn }),
+		var shapes = tree.draw({ 
+				moveTo: fn, lineTo: fn, arc: fn, 
+				beginPath: fn, closePath: fn, 
+				stroke: fn, fill: fn, fillText: fn 
+			}),
 			bonds = [];			
 		shapes.forEach(function(shape) {
 			if( shape.type == "line" ) { bonds.push(shape.points.map(elemOfCoord)); }
