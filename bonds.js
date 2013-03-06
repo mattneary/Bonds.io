@@ -165,7 +165,7 @@ Molecule.prototype = {
 			var origin = R2Group.R2Neutralizable(),
 				originIndex = R2Group.atoms.map(attr("name")).indexOf(origin),
 				nonOrigins = R2Group.atoms.filter(function(_,i){return i!=originIndex}),
-				number = '#'+R2Group.atoms[originIndex].number;
+				number = '#'+(originIndex==-1?7:R2Group.atoms[originIndex].number);
 							
 			atoms.push({ name: "R2", number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 2 });
 			var molecule = new Molecule(atoms.filter(identity));
@@ -370,7 +370,7 @@ Tree.prototype = {
 			ctx.beginPath();
 			ctx.fillStyle = ["#0f0", "#f00", "#00f", "#666"][7-number];
 			
-			tree.context.arc(ctx, xy[0], xy[1], 10, 0, 2*Math.PI);			
+			tree.context.arc(ctx, xy[0], xy[1]);			
 			ctx.fill();
 						
 			ctx.fillStyle = '#000';						
