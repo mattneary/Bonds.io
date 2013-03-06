@@ -2,22 +2,84 @@
 <html>
 	<head>
 		<title>Bonds.io</title>
+		<script src="bonds.js"></script>
+		<style>
+			body {
+				margin: 0;
+			}
+			#content {
+				width: 100%;
+				height: 100%;
+				padding-top: 100px;
+				box-sizing: border-box;
+			}
+			#header {
+				position: absolute;
+				top: 0;left: 0;
+				padding: 10px;
+				width: 100%;
+				border-bottom: 1px solid #333;
+				float: left;
+				}
+				#header span {
+					padding-bottom: 5px;	
+					display: block;
+					float: left;
+					margin-right: 10px;
+					}					
+					#header img {
+						height: 40px;
+					}
+				#header input {
+					border: 1px solid #333;
+					outline: none;
+					font-size: 25px;
+					padding: 7px 5px;
+					font-family: sans-serif;
+					margin: 0;
+				}
+				canvas {
+					position: relative;
+					padding: 0;
+					height: 100%;
+				}
+		</style>
 	</head>
 	<body>
-		<canvas id="cvs" width="600" height="600"></canvas>
-		<script src="bonds.js"></script>
+		<div id="content">
+			<div id="header">
+				<span><img src="http://f.cl.ly/items/2W1h0Q243x2g1S1w201E/logo.png"></span>
+				<span><input type="text" id="atoms"></span>
+			</div>
+			<div id="view">
+				<canvas id="cvs" width="600" height="600"></canvas>
+			</div>		
+		</div>		
 		<script>
-			var formula = new Formula("C6H12");
-			var molecule = new Molecule(formula.atoms());
-			
-			var solve;
-			molecule.branchSolve(function(summary) {
-				solve = summary;
-			});
-			console.log(solve);
-			
-			var tree = new Tree(solve);			
-			tree.draw(document.getElementById('cvs').getContext('2d'));
+			(function() {
+				var canvas = document.getElementById('cvs');
+				var drawMolecule = function(input) {
+					// reset canvas
+					canvas.width = canvas.width;
+				
+					// construct a molecule
+					var formula = new Formula(input);
+					var molecule = new Molecule(formula.atoms());
+					
+					// solve the molecule recursively
+					var solve;
+					molecule.branchSolve(function(summary) {
+						solve = summary;
+					});
+					
+					// make a tree of the bonds and render it
+					var tree = new Tree(solve);			
+					tree.draw(canvas.getContext('2d'));
+				};
+				document.getElementById('atoms').onchange = function() {
+					drawMolecule(this.value);
+				};
+			})();
 		</script>
 	</body>
 </html>
