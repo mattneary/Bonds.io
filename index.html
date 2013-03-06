@@ -12,12 +12,13 @@
 				n = new Atom("N", 5),
 				o = new Atom("O", 6);
 		
-			var molecule = new Molecule([c,o,o]);
+			var molecule = new Molecule([c,h,n]);
 			
 			var solve;
 			molecule.branchSolve(function(summary) {
 				solve = summary;
 			});
+			console.log(solve);
 			
 			var tree = new Tree(solve);			
 			tree.draw(document.getElementById('cvs').getContext('2d'));

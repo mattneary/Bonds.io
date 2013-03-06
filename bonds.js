@@ -122,6 +122,7 @@ Molecule.prototype = {
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
 				 			
+			console.log(JSON.stringify(molecule));
 			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
 			})); 
@@ -143,9 +144,10 @@ Molecule.prototype = {
 			
 			var origin = R1Group.R1Neutralizable(),
 				originIndex = R1Group.atoms.map(attr("name")).indexOf(origin),
-				nonOrigins = R1Group.atoms.filter(function(_,i){return i!=originIndex});
+				nonOrigins = R1Group.atoms.filter(function(_,i){return i!=originIndex}),
+				number = '#'+R1Group.atoms[originIndex].number;
 
-			atoms.push({ name: "R1|"+depth, number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#7",depth,0,originIndex], bondCount: 1 });
+			atoms.push({ name: "R1", number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 1 });
 			var molecule = new Molecule(atoms.filter(identity));					
 			molecule.branchSolve(cb, depth+1);
 			subcount++;
@@ -163,9 +165,10 @@ Molecule.prototype = {
 			
 			var origin = R2Group.R2Neutralizable(),
 				originIndex = R2Group.atoms.map(attr("name")).indexOf(origin),
-				nonOrigins = R2Group.atoms.filter(function(_,i){return i!=originIndex});
+				nonOrigins = R2Group.atoms.filter(function(_,i){return i!=originIndex}),
+				number = '#'+R2Group.atoms[originIndex].number;
 							
-			atoms.push({ name: "R2|"+depth, number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#6",depth,0,originIndex], bondCount: 2 });
+			atoms.push({ name: "R2", number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 2 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
@@ -181,12 +184,13 @@ Molecule.prototype = {
 				var index = atoms.indexOf(RMember);				
 				delete atoms[index];
 			});
-			
+						
 			var origin = R3Group.R3Neutralizable(),
 				originIndex = R3Group.atoms.map(attr("name")).indexOf(origin),
-				nonOrigins = R3Group.atoms.filter(function(_,i){return i!=originIndex});
+				nonOrigins = R3Group.atoms.filter(function(_,i){return i!=originIndex}),
+				number = '#'+(originIndex==-1?7:R3Group.atoms[originIndex].number);
 			
-			atoms.push({ name: "R3|"+depth, number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,"#5",depth,0,originIndex], bondCount: 3 });
+			atoms.push({ name: "R3", number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 3 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
 			molecule.branchSolve(cb, depth+1);
@@ -291,27 +295,55 @@ Tree.prototype = {
 	context: {
 		points: [],
 		line: function(ctx, p1, p2, shift) {
+			var size = this.window.size, 
+				xOffset = this.window.xOffset,
+				yOffset = this.window.yOffset;
 			var x1 = p1[0], x2 = p2[0], y1 = p1[1], y2 = p2[1];
+			ctx.lineWidth = size/15;
 			if( x1 == x2 ) {
-				ctx.moveTo(30*(x1+7)+shift*2,30*(y1+5)); 
-				ctx.lineTo(30*(x2+7)+shift*2,30*(y2+5));
+				ctx.moveTo(size*(x1+xOffset)+shift*size/15, size*(y1+yOffset)); 
+				ctx.lineTo(size*(x2+xOffset)+shift*size/15, size*(y2+yOffset));
 			} else {
-				ctx.moveTo(30*(x1+7),30*(y1+5)+shift*2); 
-				ctx.lineTo(30*(x2+7),30*(y2+5)+shift*2);				
+				ctx.moveTo(size*(x1+xOffset), size*(y1+yOffset)+shift*size/15); 
+				ctx.lineTo(size*(x2+xOffset), size*(y2+yOffset)+shift*size/15);				
 			}
 			this.points.push({ type: "line", points: [p1, p2] });
 		},
-		arc: function(ctx, x,y,r,a1,a2) { 
-			ctx.arc(30*(x+7),30*(y+5),r,a1,a2);
+		arc: function(ctx, x,y) { 
+			var size = this.window.size,
+				xOff = this.window.xOffset,
+				yOff = this.window.yOffset;
+			ctx.arc(size*(x+xOff),size*(y+yOff),size/3,0,Math.PI*2);
 			this.points.push({ type: "circle", points: [x,y] }); 
 		},
 		fillText: function(ctx, txt, x,y) {
-			ctx.fillText(txt, 30*(x+7)-5,30*(y+5)+5);
+			var size = this.window.size;
+			ctx.font = "bold "+Math.floor(size/2)+"px Arial";
+			ctx.fillText(txt, this.window.size*(x+this.window.xOffset)-size/6,this.window.size*(y+this.window.yOffset)+size/6);
 		}
+	},
+	window: function() {
+		var coords = [], treeCoords = this.coordinates();
+		for( var k in treeCoords ) coords.push(treeCoords[k]);
+		
+		var xRange = {
+			from: Math.min.apply({}, coords.map(attr(0))),
+			to: Math.max.apply({}, coords.map(attr(0)))
+		};
+		var yRange = {
+			from: Math.min.apply({}, coords.map(attr(1))),
+			to: Math.max.apply({}, coords.map(attr(1)))
+		};
+		return {
+			size: 600/(Math.max(xRange.to-xRange.from, yRange.to-yRange.from)+2),
+			xOffset: -1 * (xRange.from-1),
+			yOffset: -1 * (yRange.from-1)
+		};
 	},
 	draw: function(ctx) {
 		var tree = this;
-		this.context.points = [];		
+		this.context.points = [];	
+		this.context.window = this.window();	
 		
 		this.bondLines().forEach(function(bond) {
 			ctx.beginPath();		
@@ -342,8 +374,7 @@ Tree.prototype = {
 			tree.context.arc(ctx, xy[0], xy[1], 10, 0, 2*Math.PI);			
 			ctx.fill();
 						
-			ctx.fillStyle = '#000';			
-			ctx.font = "bold 16px Arial";			
+			ctx.fillStyle = '#000';						
 			tree.context.fillText(ctx, element, xy[0], xy[1]);			
 		}
 		return this.context.points;
