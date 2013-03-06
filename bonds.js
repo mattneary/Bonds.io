@@ -77,6 +77,8 @@ Molecule.prototype = {
 		}).join(";");
 	},
 	isOrigin: function(atom) {
+		// Checks whether a given atom can have all others connected...
+		// ... to it, the foundation of solving molecules.
 		var index = this.atoms.indexOf(atom);
 		return (8-atom.number) == this.atoms
 					.filter(function(_,i){return i!=index})
@@ -86,37 +88,53 @@ Molecule.prototype = {
 					.reduce(add, 0);
 	},
 	hasOrigin: function() {
-		var mol = this;
-		return this.atoms.filter(function(atom) {
-			return mol.isOrigin(atom);
-		}).map(attr("name"))[0]
+		// Checks which of a molecules atoms can serve as an `origin`.
+		return this.atoms.filter(this.isOrigin.bind(this)).map(attr("name"))[0]
 	},
 	subMolecules: function() {
+		// Gets every subset of a molecule that later it can be checked which...
+		// ... subsets should be isolated out and treated like sub-molecules...
+		// ... throughout this class referred to as `RGroups`.
 		var permute = listConstituents(this.atoms).map(permutations.apply.bind(permutations, {}));
 		return permute.reduce(combinations).filter(function(atoms){return atoms.length>1}).map(function(atoms){return new Molecule(atoms)});
 	},
 	R1Neutralizable: function() {
+		// Assess whether sub-molecule can connect to the rest of the molecule...
+		// ... by a single bond.
 		var withR1 = new Molecule(this.atoms.concat(new Atom("R", 7)));
 		return withR1.hasOrigin();
 	},
 	R2Neutralizable: function() {
+		// Assess whether sub-molecule can connect to the rest of the molecule...
+		// ... by two bonds.
 		var withR2 = new Molecule(this.atoms.concat(new Atom("R", 6)));
 		return withR2.hasOrigin();
 	},
 	R3Neutralizable: function() {
+		// Assess whether sub-molecule can connect to the rest of the molecule...
+		// ... by three bonds.
 		var withR3 = new Molecule(this.atoms.concat(new Atom("R", 5)));
 		return withR3.hasOrigin();
 	},
 	R1Groups: function() {
+		// Find sub-molecules that can connect to the rest of the molecule...
+		// ... by a single bond.
 		return this.subMolecules().filter(function(mol) { return mol.R1Neutralizable(); });
 	},
 	R2Groups: function() {
+		// Find sub-molecules that can connect to the rest of the molecule...
+		// ... by two bonds.
 		return this.subMolecules().filter(function(mol) { return mol.R2Neutralizable(); });
 	},
 	R3Groups: function() {
+		// Find sub-molecules that can connect to the rest of the molecule...
+		// ... by three bonds.
 		return this.subMolecules().filter(function(mol) { return mol.R3Neutralizable(); });
 	},
 	branchSolve: function(cb, depth) {
+		// Solve a molecule by recursively branching in which sub-molecules...
+		// ... are separated from the rest of the molecule, until the entire...
+		// ... can be centered on a single atom, the `origin`.
 		var subcount = 0;
 		if( depth == undefined ) { solved = false; }
 		depth = depth || 0;
@@ -198,6 +216,8 @@ Molecule.prototype = {
 		}
 	},
 	circularSolve: function(cb) {
+		// Connect a start and end atom to the molecule and then solve, afterwards...
+		// ... replacing the start and end node with a single bond. Creating a circle.
 		var molecule = new Molecule(this.atoms.concat(new Atom("St", 7)).concat(new Atom("En", 7)));			
 		molecule.branchSolve(function(bonds) {
 			var start = bonds.map(function(elm, index) {
@@ -216,12 +236,13 @@ Molecule.prototype = {
 					else { bonds[start.index] = [start.atom[0], end.atom[0], start.atom[2]]; }
 				}
 				delete bonds[end.index];
-			}
-			
+			}			
 			cb(bonds);
 		});
 	},
 	solve: function(cb) {
+		// Try to solve the molecule linearly, if that fails,...
+		// ... try to solve circularly.
 		var solve;
 		this.branchSolve(function(solution) {
 			solve = solution;
@@ -246,6 +267,8 @@ var Tree = function(bonds) {
 };
 Tree.prototype = {
 	nextDirection: function(directions) {
+		// After making a bond, decide in what direction the next bond...
+		// ... should be made.
 		directions = directions.slice().reverse();
 		var next = {
 			'1,0': [0, 1],
@@ -260,6 +283,8 @@ Tree.prototype = {
 		return [0,0];
 	},	
 	inverseDirection: function(direction) {
+		// After making a bond to another atom, decide in which direction...
+		// ... it should start in making its own bonds.
 		var inverse = {
 			'1,0': [-1, 0],
 			'0,1': [0, -1],
@@ -269,12 +294,17 @@ Tree.prototype = {
 		return inverse[direction+""];
 	},
 	coordinateTaken: function(coordinates, coordinate) {
+		// Avoid placing two atoms in the exact same spot.
 		for( var k in coordinates ) {
 			if( flatEqual(coordinates[k], coordinate) ) return true;
 		}
 		return false;
 	},
 	coordinates: function(coordinates, haveAssignedOrigin, directions) {
+		// Decide coordinates for all atoms based on a single initial...
+		// ... position and relative position derived from bonds. To...
+		// ... combat the issue of an atom's `dependencies` coming after...
+		// ... it we recurse if any are not yet placed.
 		var tree = this;
 		var directions = directions || {},
 			coordinates = coordinates || {},
@@ -301,7 +331,7 @@ Tree.prototype = {
 			directions[branch.from].push(direction);			
 			directions[branch.to].push(tree.inverseDirection(direction));
 			var shiftCoords = coordinates[branch.from].map(function(from,i){return from+direction[i]});
-			for( var i = 0; i < 10; i++ ) {
+			while( true ) {
 				if( tree.coordinateTaken(coordinates, shiftCoords) ) {
 					shiftCoords = shiftCoords.map(function(from,i){return from+[1,1][i]});
 				} else {
@@ -322,12 +352,15 @@ Tree.prototype = {
 		return coordinates;
 	},
 	bondLines: function() {
+		// Map bonds between elements to bonds between coordinates.
 		var coords = this.coordinates();
 		return this.bonds.map(function(bond) {
 			return { from: coords[bond.from], to: coords[bond.to], bonds: bond.bonds };
 		});
 	},
 	context: {
+		// A set of functions for dealing with a canvas context that handle...
+		// ... scaling and recording of points for testing.
 		points: [],
 		line: function(ctx, p1, p2, shift) {
 			var size = this.window.size, 
@@ -358,6 +391,7 @@ Tree.prototype = {
 		}
 	},
 	window: function() {
+		// Decide scale and position at which to draw the molecule.
 		var coords = [], treeCoords = this.coordinates();
 		for( var k in treeCoords ) coords.push(treeCoords[k]);
 		
@@ -376,6 +410,7 @@ Tree.prototype = {
 		};
 	},
 	draw: function(ctx) {
+		// Draw the molecule's atoms and bonds.
 		var tree = this;
 		this.context.points = [];	
 		this.context.window = this.window();	
@@ -418,6 +453,8 @@ Tree.prototype = {
 	}
 };
 var Formula = function(formula) {
+	// Relate element name to valence electron number. Note that...
+	// ... Hydrogen is considered to have 7 for convenience's sake.
 	var elements = [["H", "He"],["Li", "Be", "B", "C", "N", "O", "F", "Ne"], ["Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"], ["K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr"], ["Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe"], ["Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn"]];
 	var ve = [
 		[7,										  								8],
@@ -442,6 +479,8 @@ Formula.prototype = {
 		return list(n).map(constant(x));
 	},
 	atoms: function() {
+		// Match element names and subscripts and repeat elements...
+		// ... based on their subscripts.
 		var formula = this;
 		var parts = this.formula.match(/[A-Z][a-z]?([0-9]+)?/g),
 			atoms = parts.map(function(elm) {
