@@ -286,8 +286,23 @@ Tree.prototype = {
 			this.currentLineStart = [x,y]; 
 		},
 		lineTo: function(ctx, x,y, shift) {
-			ctx.lineTo(30*(x+7),30*(y+5)+shift*2);
+			if( x == this.currentLineStart[0] ) {
+				ctx.lineTo(30*(x+7)+shift*2,30*(y+5));
+			} else {
+				ctx.lineTo(30*(x+7),30*(y+5)+shift*2);
+			}
 			this.points.push({ type: "line", points: [this.currentLineStart, [x,y]] });
+		},
+		line: function(ctx, p1, p2, shift) {
+			var x1 = p1[0], x2 = p2[0], y1 = p1[1], y2 = p2[1];
+			if( x1 == x2 ) {
+				ctx.moveTo(30*(x1+7)+shift*2,30*(y1+5)); 
+				ctx.lineTo(30*(x2+7)+shift*2,30*(y2+5));
+			} else {
+				ctx.moveTo(30*(x1+7),30*(y1+5)+shift*2); 
+				ctx.lineTo(30*(x2+7),30*(y2+5)+shift*2);				
+			}
+			this.points.push({ type: "line", points: [p1, p2] });
 		},
 		arc: function(ctx, x,y,r,a1,a2) { 
 			ctx.arc(30*(x+7),30*(y+5),r,a1,a2);
@@ -307,20 +322,14 @@ Tree.prototype = {
 			if( bond.CtoC ) ctx.strokeStyle = 'blue';						
 			
 			if( bond.bonds == '2' ) {
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1);
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1);
+				tree.context.line(ctx, bond.from, bond.to, 1);
+				tree.context.line(ctx, bond.from, bond.to, -1);
 			} else if( bond.bonds == '3' ) {
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 1.5);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 1.5);
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], -1.5);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], -1.5);
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 0);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 0);
+				tree.context.line(ctx, bond.from, bond.to, 1.5);
+				tree.context.line(ctx, bond.from, bond.to, 0);
+				tree.context.line(ctx, bond.from, bond.to, -1.5);
 			} else {
-				tree.context.moveTo(ctx, bond.from[0], bond.from[1], 0);
-				tree.context.lineTo(ctx, bond.to[0], bond.to[1], 0);
+				tree.context.line(ctx, bond.from, bond.to, 0);
 			}
 			
 			ctx.stroke();
