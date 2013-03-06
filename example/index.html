@@ -28,9 +28,9 @@
 					
 					// solve the molecule recursively
 					var solve;
-					molecule.branchSolve(function(summary) {
+					molecule.solve(function(summary) {
 						solve = summary;
-					});
+					});					
 					
 					// make a tree of the bonds and render it
 					var tree = new Tree(solve);			

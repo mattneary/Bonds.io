@@ -124,7 +124,6 @@ Molecule.prototype = {
 		if( this.hasOrigin() ) {	
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
-				 			
 			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
 			})); 
@@ -197,6 +196,42 @@ Molecule.prototype = {
 			
 			molecule.branchSolve(cb, depth+1);
 		}
+	},
+	circularSolve: function(cb) {
+		var molecule = new Molecule(this.atoms.concat(new Atom("St", 7)).concat(new Atom("En", 7)));			
+		molecule.branchSolve(function(bonds) {
+			var start = bonds.map(function(elm, index) {
+					return { atom: elm, index: index };
+				}).filter(function(bond) { return bond.atom[0].match(/St/) || bond.atom[1].match(/St/) })[0],
+				end = bonds.map(function(elm, index) {
+					return { atom: elm, index: index };
+				}).filter(function(bond) { return bond.atom[0].match(/En/) || bond.atom[1].match(/En/) })[0];	
+					
+			if( start.atom && end.atom ) {
+				if( start.atom[0].match(/St/) ) {
+					if( end.atom[0].match(/En/) ) bonds[start.index] = [start.atom[1], end.atom[1], start.atom[2]];
+					else { bonds[start.index] = [start.atom[1], end.atom[0], start.atom[2]]; }
+				} else {
+					if( end.atom[0].match(/En/) ) bonds[start.index] = [start.atom[0], end.atom[1], start.atom[2]];
+					else { bonds[start.index] = [start.atom[0], end.atom[0], start.atom[2]]; }
+				}
+				delete bonds[end.index];
+			}
+			
+			cb(bonds);
+		});
+	},
+	solve: function(cb) {
+		var solve;
+		this.branchSolve(function(solution) {
+			solve = solution;
+		});
+		if( !solve ) {
+			this.circularSolve(function(solution) {
+				solve = solution;
+			});
+		}
+		cb(solve);
 	}
 };
 

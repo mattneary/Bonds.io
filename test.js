@@ -190,4 +190,21 @@ var assert = function(assertion, fn) {
 			os = atoms.map(utils.attr("name")).filter(utils.isEqual("O"));
 		return cs.length == 6 && hs.length == 12 && os.length == 6;
 	});
+	
+	assert("Circular solving of molecule", function() {
+		var o = new Atom("O", 6);
+	
+		var molecule = new Molecule([o,o,o]);
+		
+		var solve;
+		molecule.solve(function(summary) {
+			solve = summary;
+		});
+		
+		var oo = solve.filter(function(bond) {
+			return (bond[0][0] == 'O' && bond[1][0] == 'O');
+		});
+		
+		return oo.length == 3;
+	});
 })();
