@@ -137,8 +137,6 @@ var assert = function(assertion, fn) {
 			solve = summary;
 		});
 		
-		console.log(solve);
-		
 		var ch = solve.filter(function(bond) {
 			return (bond[0][0] == 'C' && bond[1][0] == 'H') || (bond[1][0] == 'C' && bond[0][0] == 'H');
 		});

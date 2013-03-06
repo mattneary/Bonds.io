@@ -122,7 +122,6 @@ Molecule.prototype = {
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
 				 			
-			console.log(JSON.stringify(molecule));
 			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
 			})); 
