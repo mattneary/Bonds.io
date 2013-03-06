@@ -4,15 +4,15 @@ Bonds.io is a website that draws bond diagrams of provided molecules. I recently
 
 Usage
 =====
-Include `bonds.js`, make a new `Formula` based on a string, construct a `Molecule` from the response of `Formula#atoms`, call `Molecule#branchSolve` and make a `Tree` of that solution. Then call `Tree#draw`. For example
+Include `bonds.js`, make a new `Formula` based on a string, construct a `Molecule` from the response of `Formula#atoms`, call `Molecule#solve` and make a `Tree` of that solution. Then call `Tree#draw`. For example
 
 ```javascript
 var formula = new Formula("C6H12");
 var molecule = new Molecule(formula.atoms());
 
 var solve;
-molecule.branchSolve(function(summary) {
-	solve = summary;
+molecule.solve(function(solution) {
+	solve = solution;
 });
 
 var tree = new Tree(solve);			
