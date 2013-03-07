@@ -29,12 +29,12 @@
 					
 					// solve the molecule recursively
 					var solve;
-					molecule.solve(function(summary) {
-						solve = summary;
+					molecule.solve(function(solution) {
+						solve = solution;
 					});			
-					console.log(molecule.endpoints.start[1], molecule.endpoints.end[1]);
+					
 					// make a tree of the bonds and render it
-					var tree = new Tree(solve, molecule.endpoints), coords = tree.coordinates();					
+					var tree = new Tree(solve), coords = tree.coordinates();					
 					tree.draw(canvas.getContext('2d'));				
 				};
 				document.getElementById('atoms').onchange = function() {
