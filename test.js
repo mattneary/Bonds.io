@@ -158,9 +158,9 @@ var assert = function(assertion, fn) {
 		var solves = [],
 			i = 0;
 		molecule.solve(function(summary) {
-			solves.push(summary);
+			solves.push(summary.bonds);
 		}, false);
-				
+		
 		return solves.map(function(solve) {
 			return solve.filter(function(bond) {
 				return bond[0][0] == 'H' || bond[1][0] == 'H';
@@ -175,7 +175,7 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([c,c,h,h,h,h]);
 		
 		var solve;
-		molecule.branchSolve(function(summary) {
+		molecule.solve(function(summary) {
 			solve = summary;
 		});
 		
@@ -194,7 +194,7 @@ var assert = function(assertion, fn) {
 		});
 				
 		// make sure all bonds drawn are as calculated
-		return solve.filter(function(bond) {
+		return solve.bonds.filter(function(bond) {
 			return bonds.filter(function(drawnBond) {
 				return (drawnBond[0] == bond[0] && drawnBond[1] == bond[1]) || (drawnBond[0] == bond[1] && drawnBond[1] == bond[0]);
 			}).length == 0;
@@ -217,7 +217,7 @@ var assert = function(assertion, fn) {
 		
 		var solve;
 		molecule.solve(function(summary) {
-			solve = summary;
+			solve = summary.bonds;
 		});
 		
 		var oo = solve.filter(function(bond) {
@@ -225,5 +225,21 @@ var assert = function(assertion, fn) {
 		});
 		
 		return oo.length == 3;
+	});
+	
+	assert("Drawing of 'circles' in a way that it is clear", function() {
+		var formula = new Formula("C4O12");
+		var molecule = new Molecule(formula.atoms());
+
+		var tree, coords;
+		molecule.solve(function(solution) {
+			tree = new Tree(solution);
+			coords = tree.coordinates();
+		});
+
+		var start = coords[molecule.endpoints.start[1]], 
+			end = coords[molecule.endpoints.end[1]];		
+
+		return start[0] != end[0] && start[1] != end[1];
 	});
 })();

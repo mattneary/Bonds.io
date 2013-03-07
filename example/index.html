@@ -32,9 +32,9 @@
 					molecule.solve(function(summary) {
 						solve = summary;
 					});			
-
+					console.log(molecule.endpoints.start[1], molecule.endpoints.end[1]);
 					// make a tree of the bonds and render it
-					var tree = new Tree(solve);
+					var tree = new Tree(solve, molecule.endpoints), coords = tree.coordinates();					
 					tree.draw(canvas.getContext('2d'));				
 				};
 				document.getElementById('atoms').onchange = function() {

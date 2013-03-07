@@ -219,6 +219,7 @@ Molecule.prototype = {
 	circularSolve: function(cb) {
 		// Connect a start and end atom to the molecule and then solve, afterwards...
 		// ... replacing the start and end node with a single bond. Creating a circle.
+		var self = this;
 		var molecule = new Molecule(this.atoms.concat(new Atom("St", 7)).concat(new Atom("En", 7)));			
 		molecule.branchSolve(function(bonds) {
 			var start = bonds.map(function(elm, index) {
@@ -227,7 +228,12 @@ Molecule.prototype = {
 				end = bonds.map(function(elm, index) {
 					return { atom: elm, index: index };
 				}).filter(function(bond) { return bond.atom[0].match(/En/) || bond.atom[1].match(/En/) })[0];	
-					
+			
+			self.endpoints = {
+				start: start.atom,
+				end: end.atom
+			};	
+			
 			if( start.atom && end.atom ) {
 				if( start.atom[0].match(/St/) ) {
 					if( end.atom[0].match(/En/) ) bonds[start.index] = [start.atom[1], end.atom[1], start.atom[2]];
@@ -248,7 +254,10 @@ Molecule.prototype = {
 		var solves = [];
 		this.branchSolve(function(solution) {
 			if( solution.join("").indexOf("R") != -1 ) return;
-			cb(solution);
+			cb({
+				method: "branch",
+				bonds: solution
+			});
 			solves.push(solution);
 		}, firstOnly);
 		if( !solves.length ) {
@@ -256,19 +265,24 @@ Molecule.prototype = {
 			this.circularSolve(function(solution) {
 				solve = solution;
 			});
-			cb(solve);
+			cb({
+				method: "circle",
+				bonds: solve,
+				endpoints: this.endpoints
+			});
 		}
 	}
 };
 
-var Tree = function(bonds) {
-	this.bonds = bonds.map(function(bond) {
+var Tree = function(solution) {
+	this.bonds = solution.bonds.map(function(bond) {
 		return bond.from ? bond : {
 			from: bond[0],
 			to: bond[1],
 			bonds: bond[2]
 		};
-	});		
+	});	
+	this.endpoints = solution.endpoints || { start: "", end: "" };
 };
 Tree.prototype = {
 	nextDirection: function(directions, preference) {
@@ -344,6 +358,13 @@ Tree.prototype = {
 				preferredDirection = [1,0];
 			}
 			
+			// For bonds at a start point, try to go the opposite direction of the end point
+			if( branch.from == tree.endpoints.start[1] || branch.to == tree.endpoints.start[1] ) {
+				preferredDirection = [0,1];
+			} else if( branch.from == tree.endpoints.end[1] || branch.to == tree.endpoints.end[1] ) {
+				preferredDirection = [0,-1];
+			}
+			
 			// Place the new atom in a given direction relative to the atom to...
 			// ... which it is bonded.
 			var direction = tree.nextDirection(directions[branch.from], preferredDirection);			
@@ -370,7 +391,7 @@ Tree.prototype = {
 		});
 		
 		if( unknowns.length ) {				
-			var tree = new Tree(unknowns);
+			var tree = new Tree({ method: "recurse", endpoints: tree.endpoints, bonds: unknowns});
 			var add = tree.coordinates(coordinates, haveAssignedOrigin, directions);
 			for( var k in add ) {
 				coordinates[k] = add[k];
