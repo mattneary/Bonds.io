@@ -1,6 +1,6 @@
 Introduction
 ============
-Bonds.io is a website that draws bond diagrams of provided molecules. I recently rewrote the algorithm to be much more maintainable, thus this version has not yet been published to the webpage.
+Bonds.io is a website that draws bond diagrams of provided molecules. It is currently tested to work with covalent bonds, including huge organic molecules like `C6H12O6` and circular structures like `SO3`.
 
 Usage
 =====
@@ -18,3 +18,8 @@ molecule.solve(function(solution) {
 var tree = new Tree(solve);			
 tree.draw(canvas.getContext('2d'));
 ```
+
+Roadmap
+=======
+- Implement ionic bonds or at least bonding without a formal charge of zero.
+- Add machine learning to save time in the recursive solving process.
