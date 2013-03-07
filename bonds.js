@@ -131,13 +131,14 @@ Molecule.prototype = {
 		// ... by three bonds.
 		return this.subMolecules().filter(function(mol) { return mol.R3Neutralizable(); });
 	},
-	branchSolve: function(cb, depth) {
+	branchSolve: function(cb, firstOnly, depth) {
 		// Solve a molecule by recursively branching in which sub-molecules...
 		// ... are separated from the rest of the molecule, until the entire...
 		// ... can be centered on a single atom, the `origin`.
 		var subcount = 0;
 		if( depth == undefined ) { solved = false; }
 		depth = depth || 0;
+		firstOnly = firstOnly === false ? false : true;
 		if( solved ) { return; }
 		if( this.hasOrigin() ) {	
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
@@ -145,7 +146,7 @@ Molecule.prototype = {
 			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
 			})); 
-			solved = true;
+			if(firstOnly) solved = true;
 			return;
 		}
 		if( this.R1Groups().length ) {
@@ -168,7 +169,7 @@ Molecule.prototype = {
 
 			atoms.push({ name: "R1", number: 7, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 1 });
 			var molecule = new Molecule(atoms.filter(identity));					
-			molecule.branchSolve(cb, depth+1);
+			molecule.branchSolve(cb, firstOnly, depth+1);
 			subcount++;
 		}
 		if( this.R2Groups().length ) {
@@ -190,7 +191,7 @@ Molecule.prototype = {
 			atoms.push({ name: "R2", number: 6, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 2 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
-			molecule.branchSolve(cb, depth+1);
+			molecule.branchSolve(cb, firstOnly, depth+1);
 			subcount++;
 		}
 		if( this.R3Groups().length ) {
@@ -212,7 +213,7 @@ Molecule.prototype = {
 			atoms.push({ name: "R3", number: 5, subMol: new Molecule(nonOrigins), subMolCenter: ""+[origin,number,depth,0,originIndex], bondCount: 3 });
 			var molecule = new Molecule(atoms.filter(identity));
 			
-			molecule.branchSolve(cb, depth+1);
+			molecule.branchSolve(cb, firstOnly, depth+1);
 		}
 	},
 	circularSolve: function(cb) {
@@ -240,19 +241,23 @@ Molecule.prototype = {
 			cb(bonds);
 		});
 	},
-	solve: function(cb) {
+	solve: function(cb, firstOnly) {
 		// Try to solve the molecule linearly, if that fails,...
-		// ... try to solve circularly.
-		var solve;
+		// ... try to solve circularly. Don't count as a solution...
+		// ... a bond list including an `RGroup`.
+		var solves = [];
 		this.branchSolve(function(solution) {
-			solve = solution;
-		});
-		if( !solve ) {
+			if( solution.join("").indexOf("R") != -1 ) return;
+			cb(solution);
+			solves.push(solution);
+		}, firstOnly);
+		if( !solves.length ) {
+			var solve;
 			this.circularSolve(function(solution) {
 				solve = solution;
 			});
+			cb(solve);
 		}
-		cb(solve);
 	}
 };
 

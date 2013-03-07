@@ -149,6 +149,25 @@ var assert = function(assertion, fn) {
 		return ch.length == 14 && cc.length == 5;
 	});
 	
+	assert("Organic chemistry isomers", function() {
+		var c = new Atom("C", 4),
+			h = new Atom("H", 7);
+	
+		var molecule = new Molecule([c,c,c,c,h,h,h,h]);
+		
+		var solves = [],
+			i = 0;
+		molecule.solve(function(summary) {
+			solves.push(summary);
+		}, false);
+				
+		return solves.map(function(solve) {
+			return solve.filter(function(bond) {
+				return bond[0][0] == 'H' || bond[1][0] == 'H';
+			}).length;
+		}).filter(utils.isEqual(4)).length == 2;
+	});
+	
 	assert("Plotting of bonds and atoms", function() {
 		var c = new Atom("C", 4),
 			h = new Atom("H", 7);
