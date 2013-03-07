@@ -172,7 +172,7 @@ var assert = function(assertion, fn) {
 		var c = new Atom("C", 4),
 			h = new Atom("H", 7);
 	
-		var molecule = new Molecule([c,h,h,h,h]);
+		var molecule = new Molecule([c,c,h,h,h,h]);
 		
 		var solve;
 		molecule.branchSolve(function(summary) {

@@ -271,7 +271,7 @@ var Tree = function(bonds) {
 	});		
 };
 Tree.prototype = {
-	nextDirection: function(directions) {
+	nextDirection: function(directions, preference) {
 		// After making a bond, decide in what direction the next bond...
 		// ... should be made.
 		directions = directions.slice().reverse();
@@ -281,6 +281,12 @@ Tree.prototype = {
 			'-1,0': [0, -1],
 			'0,-1': [1, 0]
 		};
+		
+		// Allow a preferred direction to be taken, useful in making organic...
+		// ... look as they are usually seen, i.e., in making C-C bonds...
+		// ... horizontal.
+		if( preference && directions.indexOf(preference) == -1 ) return preference;
+		
 		for( var k in directions ) {
 			var direction = directions[k];
 			if( directions.indexOf(next[direction]) == -1 ) return next[direction];
@@ -331,16 +337,33 @@ Tree.prototype = {
 						
 			directions[branch.from] = directions[branch.from] || [[0,-1]];	
 			directions[branch.to] = directions[branch.to] || [];					
-					
-			var direction = tree.nextDirection(directions[branch.from]);
-			directions[branch.from].push(direction);			
-			directions[branch.to].push(tree.inverseDirection(direction));
+				
+			// For bonds between the same element (e.g., C=C) try to go straight out
+			var preferredDirection;
+			if( branch.from.match(/^[A-Za-z]+/)[0] == branch.to.match(/^[A-Za-z]+/)[0] ) {
+				preferredDirection = [1,0];
+			}
+			
+			// Place the new atom in a given direction relative to the atom to...
+			// ... which it is bonded.
+			var direction = tree.nextDirection(directions[branch.from], preferredDirection);			
+			directions[branch.from].push(direction);
+			directions[branch.to].push(tree.inverseDirection(direction));						
 			var shiftCoords = coordinates[branch.from].map(function(from,i){return from+direction[i]});
+			
+			// Change direction or move outward until the proposed location of...
+			// ... the new atom is not already occupied. This serves as a sort of...
+			// ... fallback plan to avoid overlaps at all costs.
 			while( true ) {
-				if( tree.coordinateTaken(coordinates, shiftCoords) ) {
+				if( tree.coordinateTaken(coordinates, shiftCoords) && directions.length == 4 ) {
 					shiftCoords = shiftCoords.map(function(from,i){return from+[1,1][i]});
+				} else if( tree.coordinateTaken(coordinates, shiftCoords) ) {
+					direction = tree.nextDirection(directions[branch.from]);
+					directions[branch.from].push(direction);
+					directions[branch.to].push(tree.inverseDirection(direction));
+					shiftCoords = coordinates[branch.from].map(function(from,i){return from+direction[i]});
 				} else {
-					coordinates[branch.to] = shiftCoords;
+					coordinates[branch.to] = shiftCoords;					
 					break;
 				}
 			}			
@@ -420,6 +443,7 @@ Tree.prototype = {
 		this.context.points = [];	
 		this.context.window = this.window();	
 		
+		// Render the bonds between atoms.
 		this.bondLines().forEach(function(bond) {
 			ctx.beginPath();		
 			ctx.strokeStyle = 'black';
@@ -438,6 +462,8 @@ Tree.prototype = {
 			
 			ctx.stroke();
 		});
+		
+		// Render the atoms whose bonds we have already drawn.
 		var coordinates = this.coordinates();
 		for(var k in coordinates) {
 			var xy = coordinates[k];
@@ -475,8 +501,7 @@ var Formula = function(formula) {
 			atoms[elm] = new Atom(elm, ve[i][j]);
 		});
 	});
-	this.namedAtom = atoms;
-	
+	this.namedAtom = atoms;	
 	this.formula = formula;	
 };
 Formula.prototype = {

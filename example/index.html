@@ -19,9 +19,6 @@
 			(function() {
 				var drawer;
 				var canvas = document.getElementById('cvs');
-				var cycle = function(solves) {
-				
-				};
 				var drawMolecule = function(input) {
 					// reset canvas
 					canvas.width = canvas.width;
@@ -31,7 +28,7 @@
 					var molecule = new Molecule(formula.atoms());
 					
 					// solve the molecule recursively
-					var solve = [];
+					var solve;
 					molecule.solve(function(summary) {
 						solve = summary;
 					});			
