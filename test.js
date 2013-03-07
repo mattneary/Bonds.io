@@ -112,8 +112,8 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([c,c,h,h,h,h]);
 		
 		var solve;
-		molecule.branchSolve(function(summary) {
-			solve = summary;
+		molecule.branchSolve(function(solution) {
+			solve = solution;
 		});
 		
 		var ch = solve.filter(function(bond) {
@@ -134,8 +134,8 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([c,c,c,c,c,c,h,h,h,h,h,h,h,h,h,h,h,h,h,h]);
 		
 		var solve;
-		molecule.branchSolve(function(summary) {
-			solve = summary;
+		molecule.branchSolve(function(solution) {
+			solve = solution;
 		});
 		
 		var ch = solve.filter(function(bond) {
@@ -157,8 +157,8 @@ var assert = function(assertion, fn) {
 		
 		var solves = [],
 			i = 0;
-		molecule.solve(function(summary) {
-			solves.push(summary.bonds);
+		molecule.solve(function(solution) {
+			solves.push(solution.bonds);
 		}, false);
 		
 		return solves.map(function(solve) {
@@ -175,8 +175,8 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([c,c,h,h,h,h]);
 		
 		var solve;
-		molecule.solve(function(summary) {
-			solve = summary;
+		molecule.solve(function(solution) {
+			solve = solution;
 		});
 		
 		var tree = new Tree(solve);
@@ -216,8 +216,8 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([o,o,o]);
 		
 		var solve;
-		molecule.solve(function(summary) {
-			solve = summary.bonds;
+		molecule.solve(function(solution) {
+			solve = solution.bonds;
 		});
 		
 		var oo = solve.filter(function(bond) {
