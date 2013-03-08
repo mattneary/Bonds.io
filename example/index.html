@@ -17,7 +17,6 @@
 		</div>		
 		<script>
 			(function() {
-				var drawer;
 				var canvas = document.getElementById('cvs');
 				var drawMolecule = function(input) {
 					// reset canvas
@@ -35,7 +34,7 @@
 					
 					// make a tree of the bonds and render it
 					var tree = new Tree(solve), coords = tree.coordinates();					
-					tree.draw(canvas.getContext('2d'));				
+					tree.draw(canvas.getContext('2d'));	
 				};
 				document.getElementById('atoms').onchange = function() {
 					drawMolecule(this.value);
