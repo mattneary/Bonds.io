@@ -53,26 +53,34 @@ var Context = function() {
 };
 var Atom = function(label, ve, charge) {
 	this.charge = charge || 0;
-	this.name = label+(charge?"+"+charge:"");
+	this.name = label+(charge?(charge>0?"+"+charge:"_"+Math.abs(charge)):"");
 	this.element = label;
 	this.number = ve;	
 };
 Atom.prototype = {
 	renderCharge: function() {
+		var prefix = this.charge > 0 ? String.fromCharCode(0x207A) : String.fromCharCode(0x207B),
+			number = this.charge > 0 ? this.charge : -1*this.charge;
 		var superscripts = [0, 0xb9, 0xb2, 0xb3].map(function(code) {
-			return code ? String.fromCharCode(0x207A)+String.fromCharCode(code) : "";
+			return code ? prefix+String.fromCharCode(code) : "";
 		});
-		return superscripts[this.charge];
+		return superscripts[number];
 	},
 	parseName: function(name) {
 		var superscripts = [0, 0xb9, 0xb2, 0xb3].map(function(code) {
 			return code ? String.fromCharCode(0x207A)+String.fromCharCode(code) : "";
 		});
+		var chargeMatch = name.match(/[+_][0-9]/);
 		var element = name.match(/^[a-zA-Z]+/)[0],
 			number = name.match(/#[0-9]/)[0].substr(1)-0,
-			charge = name.match(/\+[0-9]/) ? parseInt(name.match(/\+[0-9]/)[0][1]) : 0;
+			chargeNum = chargeMatch ? parseInt(chargeMatch[0][1]) : 0,
+			charge = chargeMatch ? chargeMatch[0][0]=="_"?-1*chargeNum:chargeNum : 0;
 
 		return new Atom(element, number, charge);
+	},
+	renderInfo: function(centerLevel, subMolIndex, atomIndex) {
+		var charge = this.charge > 0 ? "+"+this.charge : "_"+Math.abs(this.charge);
+		return this.element+charge+",#"+this.number+","+centerLevel+","+subMolIndex+","+atomIndex;
 	}
 };
 var Molecule = function(atoms) {
@@ -88,12 +96,20 @@ Molecule.prototype = {
 		// ... two-dimensional array.
 		subMolIndex = subMolIndex || 0;
 		var subMolCount = 0;
-		return this.atoms.map(function(atom, index) {	
-			if( atom.subMol ) {
+		return this.atoms.map(function(atom, index) {
+			if( atom.subMol ) {				
 				subMolCount++;
+				if( !center ) {
+					return atom.subMol.output(atom.subMolCenter, subMolCount);
+				}
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
-			return atom.name+",#"+atom.number+","+getLevel(center)+","+subMolIndex+","+index+"-"+center+"-"+(8-atom.number);
+			if( new Atom().parseName(center).charge ) {
+				atom.charge = atom.number-8;
+			} else if( atom.charge ) {
+				center = center.replace(/^([A-Za-z]+)/, "$1_"+(8-atom.number));
+			}		
+			return atom.renderInfo(getLevel(center), subMolIndex, index)+"-"+center+"-"+(8-atom.number);
 		}).join(";");
 	},
 	isOrigin: function(atom) {
@@ -163,9 +179,14 @@ Molecule.prototype = {
 		if( this.hasOrigin() ) {	
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
-			cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
+			/*cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
 				return pair.split('-');
-			})); 
+			})); */
+			cb(new Molecule([{
+				name: "mol", number: 8, subMol: molecule, subMolCenter: ""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex], bondCount: 0
+			}]).output().split(';').map(function(pair) {
+				return pair.split('-');
+			}));
 			if(firstOnly) solved = true;
 			return;
 		}
@@ -512,7 +533,7 @@ Tree.prototype = {
 				element = atom.element,
 				number = atom.number,
 				charge = atom.renderCharge();
-				
+			console.log(atom, charge);
 			ctx.beginPath();
 			ctx.fillStyle = ["#0f0", "#f00", "#00f", "#666"][7-number];
 			
