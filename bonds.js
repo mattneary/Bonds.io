@@ -102,13 +102,24 @@ Molecule.prototype = {
 				if( !center ) {
 					return atom.subMol.output(atom.subMolCenter, subMolCount);
 				}
+				
+				// If ionic bond, give charge equal to bond count
+				if( center.match(/\+([0-9])/) ) {
+					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1_"+atom.bondCount);
+				} else if( center.match(/-([0-9])/) ) {
+					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1+"+atom.bondCount);
+				}
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
-			if( new Atom().parseName(center).charge ) {
+			
+			// If ionic bond, give charge equal to bond count
+			if( new Atom().parseName(center).charge && !atom.charge ) {
 				atom.charge = atom.number-8;
-			} else if( atom.charge ) {
-				center = center.replace(/^([A-Za-z]+)/, "$1_"+(8-atom.number));
+			} else if( atom.charge && !center.match(/[+_][0-9]/) ) {
+				var number = center.match(/#[0-9]/)[0].substr(1);
+				center = center.replace(/^([A-Za-z]+)/, "$1_"+(8-number));
 			}		
+			
 			return atom.renderInfo(getLevel(center), subMolIndex, index)+"-"+center+"-"+(8-atom.number);
 		}).join(";");
 	},
@@ -533,7 +544,6 @@ Tree.prototype = {
 				element = atom.element,
 				number = atom.number,
 				charge = atom.renderCharge();
-			console.log(atom, charge);
 			ctx.beginPath();
 			ctx.fillStyle = ["#0f0", "#f00", "#00f", "#666"][7-number];
 			

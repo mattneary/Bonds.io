@@ -32,7 +32,7 @@
 					molecule.solve(function(solution) {
 						solve = solution;
 					});			
-					
+
 					// make a tree of the bonds and render it
 					var tree = new Tree(solve), coords = tree.coordinates();					
 					tree.draw(canvas.getContext('2d'));	
