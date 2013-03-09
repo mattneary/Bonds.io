@@ -51,9 +51,29 @@ var Context = function() {
 		context[fn] = function(){};
 	});
 };
-var Atom = function(label, ve) {
-	this.name = label;
-	this.number = ve;
+var Atom = function(label, ve, charge) {
+	this.charge = charge || 0;
+	this.name = label+(charge?"+"+charge:"");
+	this.element = label;
+	this.number = ve;	
+};
+Atom.prototype = {
+	renderCharge: function() {
+		var superscripts = [0, 0xb9, 0xb2, 0xb3].map(function(code) {
+			return code ? String.fromCharCode(0x207A)+String.fromCharCode(code) : "";
+		});
+		return superscripts[this.charge];
+	},
+	parseName: function(name) {
+		var superscripts = [0, 0xb9, 0xb2, 0xb3].map(function(code) {
+			return code ? String.fromCharCode(0x207A)+String.fromCharCode(code) : "";
+		});
+		var element = name.match(/^[a-zA-Z]+/)[0],
+			number = name.match(/#[0-9]/)[0].substr(1)-0,
+			charge = name.match(/\+[0-9]/) ? parseInt(name.match(/\+[0-9]/)[0][1]) : 0;
+
+		return new Atom(element, number, charge);
+	}
 };
 var Molecule = function(atoms) {
 	this.atoms = atoms;
@@ -435,8 +455,8 @@ Tree.prototype = {
 		},
 		fillText: function(ctx, txt, x,y) {
 			var size = this.window.size;
-			ctx.font = "bold "+Math.floor(size/2)+"px Arial";
-			ctx.fillText(txt, this.window.size*(x+this.window.xOffset)-size/6,this.window.size*(y+this.window.yOffset)+size/6);
+			ctx.font = "bold "+Math.floor(size/4)+"px Arial";
+			ctx.fillText(txt, this.window.size*(x+this.window.xOffset)-size/4,this.window.size*(y+this.window.yOffset)+size/8);
 		}
 	},
 	window: function() {
@@ -485,11 +505,14 @@ Tree.prototype = {
 		});
 		
 		// Render the atoms whose bonds we have already drawn.
-		var coordinates = this.coordinates();
+		var coordinates = this.coordinates();		
 		for(var k in coordinates) {
 			var xy = coordinates[k];
-			var element = k.match(/^[a-zA-Z]+/)[0],
-				number = k.match(/#[0-9]/)[0].substr(1)-0;
+			var atom = new Atom().parseName(k),
+				element = atom.element,
+				number = atom.number,
+				charge = atom.renderCharge();
+				
 			ctx.beginPath();
 			ctx.fillStyle = ["#0f0", "#f00", "#00f", "#666"][7-number];
 			
@@ -499,7 +522,7 @@ Tree.prototype = {
 			ctx.stroke();
 						
 			ctx.fillStyle = '#000';						
-			tree.context.fillText(ctx, element, xy[0], xy[1]);			
+			tree.context.fillText(ctx, element+charge, xy[0], xy[1]);			
 		}
 		return this.context.points;
 	}
@@ -519,7 +542,8 @@ var Formula = function(formula) {
 	var atoms = {};
 	elements.forEach(function(row, i) {
 		row.forEach(function(elm, j) {
-			atoms[elm] = new Atom(elm, ve[i][j]);
+			var number = ve[i][j];
+			atoms[elm] = number >= 4 ? new Atom(elm, number) : new Atom(elm, 8-number, number);
 		});
 	});
 	this.namedAtom = atoms;	

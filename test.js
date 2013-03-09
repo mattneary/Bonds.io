@@ -242,4 +242,16 @@ var assert = function(assertion, fn) {
 
 		return start[0] != end[0] && start[1] != end[1];
 	});
+	
+	assert("Ionic bonds", function() {
+		var formula = new Formula("NaCl");
+		var molecule = new Molecule(formula.atoms());
+		
+		var solve;
+		molecule.solve(function(solution) {
+			solve = solution.bonds;
+		});
+		
+		return solve.length == 1 && solve[0][2] == "1";
+	});
 })();
