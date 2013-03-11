@@ -21,5 +21,6 @@ tree.draw(canvas.getContext('2d'));
 
 Roadmap
 =======
+- Fix handling of ionic bonds with metals & recognition of charges in this case.
 - Implement bonding between polyatomic ions.
 - Add machine learning to save time in the recursive solving process.
