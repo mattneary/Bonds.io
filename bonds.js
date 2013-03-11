@@ -351,7 +351,7 @@ Molecule.prototype = {
 				}).filter(function(bond) { return bond.atom[0].match(/St/) || bond.atom[1].match(/St/) })[0],
 				end = bonds.map(function(elm, index) {
 					return { atom: elm, index: index };
-				}).filter(function(bond) { return bond.atom[0].match(/En/) || bond.atom[1].match(/En/) })[0];	
+				}).filter(function(bond) { return bond.atom[0].match(/En/) || bond.atom[1].match(/En/) })[0];				
 			
 			self.endpoints = {
 				start: start.atom,
@@ -367,7 +367,13 @@ Molecule.prototype = {
 					else { bonds[start.index] = [start.atom[0], end.atom[0], start.atom[2]]; }
 				}
 				delete bonds[end.index];
-			}			
+			}
+					
+			// Don't allow circles to be formed with a single element
+			if( bonds[start.index][0] == bonds[start.index][1] ) {
+				return;
+			}
+			
 			cb(bonds);
 		});
 	},
@@ -385,18 +391,20 @@ Molecule.prototype = {
 			solves.push(solution);
 		}, firstOnly);
 		
-		if( !solves.length && this.atoms.length > 2 ) {
+		if( (!solves.length || firstOnly === false) && this.atoms.length > 2 ) {
 			var solve;
-			this.circularSolve(function(solution) {
+			this.circularSolve(function(solution) {				
 				solve = solution;
 				solves.push(solution);
-			});
-			cb({
-				method: "circle",
-				bonds: solve,
-				endpoints: this.endpoints
-			});
-		}		
+			});			
+			if( solve ) {
+				cb({
+					method: "circle",
+					bonds: solve,
+					endpoints: this.endpoints
+				});
+			}
+		}
 		
 		if( !solves.length ) {			
 			// Cycle through charge counts to make polyatomic ions by...
