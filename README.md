@@ -22,5 +22,6 @@ tree.draw(canvas.getContext('2d'));
 Roadmap
 =======
 - [√] Implement ionic bonds or at least bonding without a formal charge of zero.
-- Implement polyatomic ions.
+- [√] Implement polyatomic ions.
+- Implement bonding between polyatomic ions.
 - Add machine learning to save time in the recursive solving process.
