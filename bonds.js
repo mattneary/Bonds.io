@@ -384,10 +384,10 @@ Molecule.prototype = {
 				delete bonds[end.index];
 			}
 					
-			// Don't allow circles to be formed with a single element
+			// Don't allow circles to be formed with a single element			
 			if( bonds[start.index][0] == bonds[start.index][1] ) {
 				return;
-			}
+			}						
 			
 			cb(bonds);
 		});
@@ -396,6 +396,16 @@ Molecule.prototype = {
 		// Try to solve the molecule linearly, if that fails,...
 		// ... try to solve circularly. Don't count as a solution...
 		// ... a bond list including an `RGroup`.
+		var bondsAreUnique = function(bonds) {	
+			// Don't allow duplicate bonds to be made.		
+			var unique = {}, resp = true;
+			bonds.forEach(function(bond) {
+				if( unique[bond[0]+","+bond[1]] || unique[bond[1]+","+bond[0]] ) resp = false;
+				unique[bond[0]+","+bond[1]] = true;
+				unique[bond[1]+","+bond[0]] = true;
+			});
+			return resp;
+		};
 		var solves = [];
 		this.branchSolve(function(solution) {			
 			if( solution.join("").indexOf("R") != -1 ) return;
@@ -412,7 +422,7 @@ Molecule.prototype = {
 				solve = solution;
 				solves.push(solution);
 			});			
-			if( solve ) {
+			if( solve && bondsAreUnique(solve) ) {
 				cb({
 					method: "circle",
 					bonds: solve,
