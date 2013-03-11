@@ -106,7 +106,7 @@ Molecule.prototype = {
 				// If ionic bond, give charge equal to bond count
 				if( center.match(/\+([0-9])/) ) {
 					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1_"+atom.bondCount);
-				} else if( center.match(/-([0-9])/) ) {
+				} else if( center.match(/_([0-9])/) ) {
 					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1+"+atom.bondCount);
 				}
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
@@ -190,9 +190,7 @@ Molecule.prototype = {
 		if( this.hasOrigin() ) {	
 			var originIndex = this.atoms.map(attr("name")).indexOf(this.hasOrigin());			
 			var molecule = new Molecule(this.atoms.filter(function(_,i){ return i!=originIndex; }));
-			/*cb(molecule.output(""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex]).split(';').map(function(pair) {
-				return pair.split('-');
-			})); */
+
 			cb(new Molecule([{
 				name: "mol", number: 8, subMol: molecule, subMolCenter: ""+[this.hasOrigin(),"#"+this.atoms[originIndex].number,depth,originIndex], bondCount: 0
 			}]).output().split(';').map(function(pair) {
@@ -304,7 +302,7 @@ Molecule.prototype = {
 		// ... try to solve circularly. Don't count as a solution...
 		// ... a bond list including an `RGroup`.
 		var solves = [];
-		this.branchSolve(function(solution) {
+		this.branchSolve(function(solution) {			
 			if( solution.join("").indexOf("R") != -1 ) return;
 			cb({
 				method: "branch",
@@ -312,22 +310,124 @@ Molecule.prototype = {
 			});
 			solves.push(solution);
 		}, firstOnly);
-		if( !solves.length ) {
+		
+		if( !solves.length && this.atoms.length > 2 ) {
 			var solve;
 			this.circularSolve(function(solution) {
 				solve = solution;
+				solves.push(solution);
 			});
 			cb({
 				method: "circle",
 				bonds: solve,
 				endpoints: this.endpoints
 			});
-		}
+		}		
+		
+		if( !solves.length ) {
+			var removeCharge = function(name) {
+				return name.replace(/[+_][0-9]/, "");
+			};
+			var addCharge = function(name, charge) {
+				return name.replace(/([A-Z][a-z]?)([_+][0-9])*?,/, "$1"+charge+",");
+			};
+			var applyCharges = function(solution, connective) {
+				var charged = [];
+				solution = solution.filter(function(bond) {
+					if( bond[0].match(connective) ) {
+						charged.push(bond[1]);
+						return false;
+					}
+					if( bond[1].match(connective) ) {
+						charged.push(bond[0]);
+						return false;
+					}				
+					return true;		
+				});
+				return solution.map(function(bond) {
+					if( charged.indexOf(bond[0]) != -1 ) {
+						return [addCharge(bond[0], "_"+bond[2]), bond[1], bond[2]];
+					}
+					if( charged.indexOf(bond[1]) != -1 ) {
+						return [bond[0], addCharge(bond[1], "_"+bond[2]), bond[2]];
+					}
+					return bond;
+				});
+			};			
+			var skipFunnels = function(solution, connective, charge) {
+				var charged = {};
+				solution = solution.filter(function(bond) {
+					if( bond[1].match(connective) ) {
+						charged[bond[1]] = charged[bond[1]] || [];
+						charged[bond[1]].push(bond[0]);
+						return false;
+					}
+					return true;		
+				});
+				var additions = [],
+					chargedModified = [];
+				solution = solution.map(function(bond) {
+					if( bond[0].match(connective) ) {
+						chargedModified.push(bond[1]);
+						[].push.apply(additions, charged[bond[0]].map(function(bond0) {
+							return [removeCharge(bond0), bond[1], bond[2]];
+						}));
+						return false;						
+					}
+					return bond;
+				}).filter(identity);						
+				[].push.apply(solution, additions);
+				solution = solution.map(function(bond) {
+					if( chargedModified.indexOf(bond[0]) != -1 ) {
+						bond[0] = addCharge(bond[0], "_"+bond[2]);
+					}
+					if( chargedModified.indexOf(bond[1]) != -1 ) {
+						bond[1] = addCharge(bond[1], "_"+bond[2]);
+					}
+					return bond;
+				});		
+
+				return solution;
+			};
+			for( var i = 1; i < 3; i++ ) {
+				var electrons = range(i).map(constant(new Atom("e_1", 7)));
+				var mol = new Molecule(this.atoms.concat(electrons));
+				mol.branchSolve(function(solution) {
+					if( solution.join("").indexOf("R") != -1 ) return;				
+					
+					solution = applyCharges(solution, /e_/);
+					
+					cb({
+						method: "polyatomic (-"+i+")",
+						bonds: solution
+					});
+					solves.push(solution);
+				});
+				
+				if( solves.length ) break;
+				
+				var protons = range(i).map(constant(new Atom("e+1", 5)));
+				var mol = new Molecule(this.atoms.concat(protons));
+				mol.branchSolve(function(solution) {					
+					if( solution.join("").indexOf("R") != -1 ) return;				
+					
+					solution = skipFunnels(solution, /e+/, "+1");
+					
+					cb({
+						method: "polyatomic (+"+i+")",
+						bonds: solution
+					});
+					solves.push(solution);
+				});
+				
+				if( solves.length ) break;
+			}
+		}		
 	}
 };
 
 var Tree = function(solution) {
-	this.bonds = solution.bonds.map(function(bond) {
+	this.bonds = (solution.bonds ? solution.bonds : solution).map(function(bond) {
 		return bond.from ? bond : {
 			from: bond[0],
 			to: bond[1],
@@ -408,7 +508,7 @@ Tree.prototype = {
 			var preferredDirection;
 			if( branch.from.match(/^[A-Za-z]+/)[0] == branch.to.match(/^[A-Za-z]+/)[0] ) {
 				preferredDirection = [1,0];
-			}
+			}			
 			
 			// For bonds at a start point, try to go the opposite direction of the end point
 			if( branch.from == tree.endpoints.start[1] || branch.to == tree.endpoints.start[1] ) {

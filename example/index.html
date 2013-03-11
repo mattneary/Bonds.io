@@ -29,9 +29,10 @@
 					
 					// solve the molecule recursively
 					var solve;
-					molecule.solve(function(solution) {
+					molecule.solve(function(solution) {						
 						solve = solution;
 					});			
+					console.log("solved by "+solve.method);
 
 					// make a tree of the bonds and render it
 					var tree = new Tree(solve), coords = tree.coordinates();					

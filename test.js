@@ -216,8 +216,8 @@ var assert = function(assertion, fn) {
 		var molecule = new Molecule([o,o,o]);
 		
 		var solve;
-		molecule.solve(function(solution) {
-			solve = solution.bonds;
+		molecule.circularSolve(function(solution) {
+			solve = solution;
 		});
 		
 		var oo = solve.filter(function(bond) {
