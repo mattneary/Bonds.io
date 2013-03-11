@@ -83,6 +83,80 @@ Atom.prototype = {
 		return this.element+charge+",#"+this.number+","+centerLevel+","+subMolIndex+","+atomIndex;
 	}
 };
+var Ion = function (name) {
+	this.name = name;
+};
+Ion.prototype = {
+	removeCharge: function() {
+		return this.name.replace(/[+_][0-9]/, "");
+	},
+	addCharge: function(charge) {
+		return this.name.replace(/([A-Z][a-z]?)([_+][0-9])*?,/, "$1"+charge+",");
+	}
+};
+var PolyatomicIon = function(bonds) {
+	this.bonds = bonds;
+};
+PolyatomicIon.prototype = {
+	applyCharges: function(connective) {
+		var charged = [];
+		var solution = this.bonds.filter(function(bond) {
+			if( bond[0].match(connective) ) {
+				charged.push(bond[1]);
+				return false;
+			}
+			if( bond[1].match(connective) ) {
+				charged.push(bond[0]);
+				return false;
+			}				
+			return true;		
+		});
+		return solution.map(function(bond) {
+			if( charged.indexOf(bond[0]) != -1 ) {
+				return [new Ion(bond[0]).addCharge("_"+bond[2]), bond[1], bond[2]];
+			}
+			if( charged.indexOf(bond[1]) != -1 ) {
+				return [bond[0], new Ion(bond[1]).addCharge("_"+bond[2]), bond[2]];
+			}
+			return bond;
+		});
+	},			
+	skipFunnels: function(connective, charge) {
+		var charged = {};
+		var solution = this.bonds.filter(function(bond) {
+			if( bond[1].match(connective) ) {
+				charged[bond[1]] = charged[bond[1]] || [];
+				charged[bond[1]].push(bond[0]);
+				return false;
+			}
+			return true;		
+		});
+		var additions = [],
+			chargedModified = [];
+		solution = solution.map(function(bond) {
+			if( bond[0].match(connective) ) {
+				chargedModified.push(bond[1]);
+				[].push.apply(additions, charged[bond[0]].map(function(bond0) {
+					return [new Ion(bond0).removeCharge(), bond[1], bond[2]];
+				}));
+				return false;						
+			}
+			return bond;
+		}).filter(identity);						
+		[].push.apply(solution, additions);
+		solution = solution.map(function(bond) {
+			if( chargedModified.indexOf(bond[0]) != -1 ) {
+				bond[0] = new Ion(bond[0]).addCharge("_"+bond[2]);
+			}
+			if( chargedModified.indexOf(bond[1]) != -1 ) {
+				bond[1] = new Ion(bond[1]).addCharge("_"+bond[2]);
+			}
+			return bond;
+		});		
+
+		return solution;
+	}
+};
 var Molecule = function(atoms) {
 	this.atoms = atoms;
 };
@@ -324,78 +398,17 @@ Molecule.prototype = {
 			});
 		}		
 		
-		if( !solves.length ) {
-			var removeCharge = function(name) {
-				return name.replace(/[+_][0-9]/, "");
-			};
-			var addCharge = function(name, charge) {
-				return name.replace(/([A-Z][a-z]?)([_+][0-9])*?,/, "$1"+charge+",");
-			};
-			var applyCharges = function(solution, connective) {
-				var charged = [];
-				solution = solution.filter(function(bond) {
-					if( bond[0].match(connective) ) {
-						charged.push(bond[1]);
-						return false;
-					}
-					if( bond[1].match(connective) ) {
-						charged.push(bond[0]);
-						return false;
-					}				
-					return true;		
-				});
-				return solution.map(function(bond) {
-					if( charged.indexOf(bond[0]) != -1 ) {
-						return [addCharge(bond[0], "_"+bond[2]), bond[1], bond[2]];
-					}
-					if( charged.indexOf(bond[1]) != -1 ) {
-						return [bond[0], addCharge(bond[1], "_"+bond[2]), bond[2]];
-					}
-					return bond;
-				});
-			};			
-			var skipFunnels = function(solution, connective, charge) {
-				var charged = {};
-				solution = solution.filter(function(bond) {
-					if( bond[1].match(connective) ) {
-						charged[bond[1]] = charged[bond[1]] || [];
-						charged[bond[1]].push(bond[0]);
-						return false;
-					}
-					return true;		
-				});
-				var additions = [],
-					chargedModified = [];
-				solution = solution.map(function(bond) {
-					if( bond[0].match(connective) ) {
-						chargedModified.push(bond[1]);
-						[].push.apply(additions, charged[bond[0]].map(function(bond0) {
-							return [removeCharge(bond0), bond[1], bond[2]];
-						}));
-						return false;						
-					}
-					return bond;
-				}).filter(identity);						
-				[].push.apply(solution, additions);
-				solution = solution.map(function(bond) {
-					if( chargedModified.indexOf(bond[0]) != -1 ) {
-						bond[0] = addCharge(bond[0], "_"+bond[2]);
-					}
-					if( chargedModified.indexOf(bond[1]) != -1 ) {
-						bond[1] = addCharge(bond[1], "_"+bond[2]);
-					}
-					return bond;
-				});		
-
-				return solution;
-			};
+		if( !solves.length ) {			
+			// Cycle through charge counts to make polyatomic ions by...
+			// ... inclusion of either bare electrons or `funnels` and...
+			// ... later removal of them.
 			for( var i = 1; i < 3; i++ ) {
 				var electrons = range(i).map(constant(new Atom("e_1", 7)));
 				var mol = new Molecule(this.atoms.concat(electrons));
 				mol.branchSolve(function(solution) {
 					if( solution.join("").indexOf("R") != -1 ) return;				
 					
-					solution = applyCharges(solution, /e_/);
+					solution = new PolyatomicIon(solution).applyCharges(/e_/);
 					
 					cb({
 						method: "polyatomic (-"+i+")",
@@ -411,7 +424,7 @@ Molecule.prototype = {
 				mol.branchSolve(function(solution) {					
 					if( solution.join("").indexOf("R") != -1 ) return;				
 					
-					solution = skipFunnels(solution, /e+/, "+1");
+					solution = new PolyatomicIon(solution).skipFunnels(/e+/, "+1");
 					
 					cb({
 						method: "polyatomic (+"+i+")",
