@@ -99,6 +99,7 @@ var PolyatomicIon = function(bonds) {
 };
 PolyatomicIon.prototype = {
 	applyCharges: function(connective) {
+		// NOTE: currently charges are not applied to all instances of an atom
 		var charged = [];
 		var solution = this.bonds.filter(function(bond) {
 			if( bond[0].match(connective) ) {
@@ -111,12 +112,24 @@ PolyatomicIon.prototype = {
 			}				
 			return true;		
 		});
-		return solution.map(function(bond) {
+		var implementedCharges = {};
+		solution.forEach(function(bond) {
 			if( charged.indexOf(bond[0]) != -1 ) {
-				return [new Ion(bond[0]).addCharge("_"+bond[2]), bond[1], bond[2]];
+				implementedCharges[bond[0]] = (parseInt(implementedCharges[bond[0]]||0) + parseInt(bond[2])) + "";
+				return [new Ion(bond[0]).addCharge("_"+implementedCharges[bond[0]]), bond[1], bond[2]];
 			}
 			if( charged.indexOf(bond[1]) != -1 ) {
-				return [bond[0], new Ion(bond[1]).addCharge("_"+bond[2]), bond[2]];
+				implementedCharges[bond[1]] = (parseInt(implementedCharges[bond[1]]||0) + parseInt(bond[2])) + "";
+				return [bond[0], new Ion(bond[1]).addCharge("_"+implementedCharges[bond[1]]), bond[2]];
+			}
+			return bond;
+		});
+		return solution.map(function(bond) {
+			if( implementedCharges[bond[0]] ) {
+				bond[0] = new Ion(bond[0]).addCharge("_"+(new Atom().parseName(bond[0]).number - implementedCharges[bond[0]]));
+			}
+			if( implementedCharges[bond[1]] ) {
+				bond[1] = new Ion(bond[1]).addCharge("_"+(new Atom().parseName(bond[1]).number - implementedCharges[bond[1]]));
 			}
 			return bond;
 		});
