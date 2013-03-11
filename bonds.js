@@ -79,6 +79,7 @@ Atom.prototype = {
 		return new Atom(element, number, charge);
 	},
 	renderInfo: function(centerLevel, subMolIndex, atomIndex) {
+		if( !charge ) return this.element+",#"+this.number+","+centerLevel+","+subMolIndex+","+atomIndex;
 		var charge = this.charge > 0 ? "+"+this.charge : "_"+Math.abs(this.charge);
 		return this.element+charge+",#"+this.number+","+centerLevel+","+subMolIndex+","+atomIndex;
 	}
@@ -134,15 +135,15 @@ PolyatomicIon.prototype = {
 		});
 	},			
 	skipFunnels: function(connective, charge) {
-		// NOTE: charges are not currently updated across all instances of an atom...
-		// ... use the method as in PolyatomicIon#applyCharges.
 		var charged = {};
 		var solution = this.bonds.filter(function(bond) {
+			// NOTE: the choice of [1] is arbitrary, the point is...
+			// ... to get only one half of the funnel. Fix this.
 			if( bond[1].match(connective) ) {
 				charged[bond[1]] = charged[bond[1]] || [];
 				charged[bond[1]].push(bond[0]);
 				return false;
-			}
+			}			
 			return true;		
 		});
 		var additions = [],
@@ -150,7 +151,7 @@ PolyatomicIon.prototype = {
 		solution = solution.map(function(bond) {
 			if( bond[0].match(connective) ) {
 				chargedModified.push(bond[1]);
-				[].push.apply(additions, charged[bond[0]].map(function(bond0) {
+				[].push.apply(additions, (charged[bond[0]] ? charged[bond[0]] : []).map(function(bond0) {
 					return [new Ion(bond0).removeCharge(), bond[1], bond[2]];
 				}));
 				return false;						
@@ -184,7 +185,7 @@ Molecule.prototype = {
 		// ... two-dimensional array.
 		subMolIndex = subMolIndex || 0;
 		var subMolCount = 0;
-		return this.atoms.map(function(atom, index) {
+		return this.atoms.map(function(atom, index) {			
 			if( atom.subMol ) {				
 				subMolCount++;
 				if( !center ) {
@@ -193,9 +194,9 @@ Molecule.prototype = {
 				
 				// If ionic bond, give charge equal to bond count
 				if( center.match(/\+([0-9])/) ) {
-					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1_"+atom.bondCount);
+					atom.subMolCenter = new Ion(atom.subMolCenter).addCharge("_"+atom.bondCount);
 				} else if( center.match(/_([0-9])/) ) {
-					atom.subMolCenter = atom.subMolCenter.replace(/^([A-Za-z]+)/, "$1+"+atom.bondCount);
+					atom.subMolCenter = new Ion(atom.subMolCenter).addCharge("+"+atom.bondCount);
 				}
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
@@ -205,7 +206,7 @@ Molecule.prototype = {
 				atom.charge = atom.number-8;
 			} else if( atom.charge && !center.match(/[+_][0-9]/) ) {
 				var number = center.match(/#[0-9]/)[0].substr(1);
-				center = center.replace(/^([A-Za-z]+)/, "$1_"+(8-number));
+				center = new Ion(center).addCharge("_"+(8-number));
 			}		
 			
 			return atom.renderInfo(getLevel(center), subMolIndex, index)+"-"+center+"-"+(8-atom.number);
