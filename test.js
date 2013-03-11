@@ -254,4 +254,32 @@ var assert = function(assertion, fn) {
 		
 		return solve.length == 1 && solve[0][2] == "1";
 	});
+	
+	assert("Polyatomic Cation", function() {
+		var formula = new Formula("NH4");
+		var molecule = new Molecule(formula.atoms());
+		
+		var solve;
+		molecule.solve(function(solution) {
+			solve = solution.bonds;
+		});
+		
+		return solve.filter(function(bond) {
+			return bond[1].match(/^N/);
+		})[0][1].match(/\+[0-9]/)[0] == "+1";
+	});
+	
+	assert("Polyatomic Anion", function() {
+		var formula = new Formula("CO");
+		var molecule = new Molecule(formula.atoms());
+		
+		var solve;
+		molecule.solve(function(solution) {
+			solve = solution.bonds;
+		});
+		
+		return solve.filter(function(bond) {
+			return bond[1].match(/^C/);
+		})[0][1].match(/_[0-9]/)[0] == "_2";
+	});
 })();

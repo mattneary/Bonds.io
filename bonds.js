@@ -146,10 +146,10 @@ PolyatomicIon.prototype = {
 		[].push.apply(solution, additions);
 		solution = solution.map(function(bond) {
 			if( chargedModified.indexOf(bond[0]) != -1 ) {
-				bond[0] = new Ion(bond[0]).addCharge("_"+bond[2]);
+				bond[0] = new Ion(bond[0]).addCharge("+"+bond[2]);
 			}
 			if( chargedModified.indexOf(bond[1]) != -1 ) {
-				bond[1] = new Ion(bond[1]).addCharge("_"+bond[2]);
+				bond[1] = new Ion(bond[1]).addCharge("+"+bond[2]);
 			}
 			return bond;
 		});		
@@ -402,7 +402,7 @@ Molecule.prototype = {
 			// Cycle through charge counts to make polyatomic ions by...
 			// ... inclusion of either bare electrons or `funnels` and...
 			// ... later removal of them.
-			for( var i = 1; i < 3; i++ ) {
+			for( var i = 1; i <= 4; i++ ) {
 				var electrons = range(i).map(constant(new Atom("e_1", 7)));
 				var mol = new Molecule(this.atoms.concat(electrons));
 				mol.branchSolve(function(solution) {
