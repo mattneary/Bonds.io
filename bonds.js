@@ -134,6 +134,8 @@ PolyatomicIon.prototype = {
 		});
 	},			
 	skipFunnels: function(connective, charge) {
+		// NOTE: charges are not currently updated across all instances of an atom...
+		// ... use the method as in PolyatomicIon#applyCharges.
 		var charged = {};
 		var solution = this.bonds.filter(function(bond) {
 			if( bond[1].match(connective) ) {
@@ -418,7 +420,7 @@ Molecule.prototype = {
 			}
 		}
 		
-		if( !solves.length ) {			
+		if( !solves.length || firstOnly === false ) {			
 			// Cycle through charge counts to make polyatomic ions by...
 			// ... inclusion of either bare electrons or `funnels` and...
 			// ... later removal of them.
@@ -437,7 +439,7 @@ Molecule.prototype = {
 					solves.push(solution);
 				});
 				
-				if( solves.length ) break;
+				if( solves.length && firstOnly !== false ) break;
 				
 				var protons = range(i).map(constant(new Atom("e+1", 5)));
 				var mol = new Molecule(this.atoms.concat(protons));
@@ -453,7 +455,7 @@ Molecule.prototype = {
 					solves.push(solution);
 				});
 				
-				if( solves.length ) break;
+				if( solves.length && firstOnly !== false ) break;
 			}
 		}		
 	}
