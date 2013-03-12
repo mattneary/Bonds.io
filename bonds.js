@@ -4,7 +4,6 @@ var identity = function(x) { return x; };
 
 // functional forms of basic operators
 var add = function(a, b) { return a+b; };
-var gt = function(a, b) { return a>b; };
 var concat = function(a, b) { return b.concat(a); };
 var multiply = function(a, b) { return a*b; };
 var attr = function(attr) { return function(elm) {return elm[attr]; } };
@@ -31,7 +30,6 @@ var permutations = function(elm, count) { return range(count+1).map(range).map(m
 var crossProduct = function(a, b) { return b.map(chain(a.map(zip).map.bind(a.map(zip)), call)); };
 var combinations = function(a, b) { return crossProduct(a, b).reduce(concat).map(reducer(concat)) };
 var listConstituents = function(list) { 
-	list = list.sort(gt); 
 	return arrayize(list.reduce(unique)).map(function(a){
 		return [a, list.length - list.slice().reverse().indexOf(a) - list.indexOf(a)]; 
 	});
@@ -416,7 +414,7 @@ Molecule.prototype = {
 			solves.push(solution);
 		}, firstOnly);
 		
-		if( (!solves.length || firstOnly === false) && this.atoms.length > 2 ) {
+		if( (!solves.length) && this.atoms.length > 2 ) {
 			var solve;
 			this.circularSolve(function(solution) {				
 				solve = solution;
@@ -743,7 +741,6 @@ Formula.prototype = {
 		return atoms.map(function(elm) { return formula.namedAtom[elm]; });
 	}
 };
-
 
 // Export if used as a Node.js module
 try { 
