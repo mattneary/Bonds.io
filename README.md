@@ -22,6 +22,6 @@ tree.draw(canvas.getContext('2d'));
 Roadmap
 =======
 - Make circles *always* clear (cf. CO3).
-- Fix handling of ionic bonds with metals & recognition of charges in this case.
+- Fix handling of ionic bonds with metals & recognition of charges in this case (cf. MnO4).
 - Implement bonding between polyatomic ions.
 - Add machine learning to save time in the recursive solving process.
