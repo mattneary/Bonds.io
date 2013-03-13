@@ -195,8 +195,8 @@ Molecule.prototype = {
 				// If ionic bond, give charge equal to bond count
 				if( center.match(/\+([0-9])/) ) {
 					atom.subMolCenter = new Ion(atom.subMolCenter).addCharge("_"+atom.bondCount);
-				} else if( center.match(/_([0-9])/) ) {
-					atom.subMolCenter = new Ion(atom.subMolCenter).addCharge("+"+atom.bondCount);
+				} else if( atom.subMolCenter.match(/_([0-9])/) ) {
+					center = new Ion(center).addCharge("+"+atom.bondCount);
 				}
 				return atom.subMol.output(atom.subMolCenter, subMolCount)+";"+atom.subMolCenter+"-"+center+"-"+atom.bondCount;
 			}
@@ -204,7 +204,7 @@ Molecule.prototype = {
 			// If ionic bond, give charge equal to bond count
 			if( new Atom().parseName(center).charge && !atom.charge ) {
 				atom.charge = atom.number-8;
-			} else if( atom.charge && !center.match(/[+_][0-9]/) ) {
+			} else if( atom.charge && new Atom().parseName(center).charge ) {
 				var number = center.match(/#[0-9]/)[0].substr(1);
 				center = new Ion(center).addCharge("_"+(8-number));
 			}		
