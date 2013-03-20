@@ -1,3 +1,5 @@
+Note: Bonds.io has been moved to the BWHS.me organization.
+
 Introduction
 ============
 Bonds.io is a website that draws bond diagrams of provided molecules. It is currently tested to work with covalent bonds, including huge organic molecules like `C6H12O6` and circular structures like `SO3`.
