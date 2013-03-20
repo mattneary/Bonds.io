@@ -1,5 +1,5 @@
-var http = require('http');
-var mime = require('mime');
+var http = require('http'),
+	mime = require('mime');
 
 http.createServer(function(req, res) {
 	var path = req.url=='/'?'/index.html':req.url;	
