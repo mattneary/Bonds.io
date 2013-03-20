@@ -28,4 +28,4 @@ Roadmap
 
 Setup
 =====
-Service hooks are being worked on to make all pushes auto-upload to the server and restart the instance.
+Service hooks are being worked on to make all pushes auto-upload to the server and restart the instance. 
