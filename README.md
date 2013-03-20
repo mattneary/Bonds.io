@@ -1,4 +1,4 @@
-Note: Bonds.io has been moved to the BWHS.me organization.
+Note: Bonds.io has been moved to the BWHS.me organization. All commits automatically update the servers.
 
 Introduction
 ============
