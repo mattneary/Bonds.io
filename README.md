@@ -25,3 +25,7 @@ Roadmap
 - Fix handling of ionic bonds with metals & recognition of charges in this case (cf. MnO4).
 - Implement bonding between polyatomic ions.
 - Add machine learning to save time in the recursive solving process.
+
+Setup
+=====
+Service hooks are being worked on to make all pushes auto-upload to the server and restart the instance.
