@@ -1,7 +1,7 @@
 var http = require('http'),
 	mime = require('mime');
 
-http.createServer(function(req, res) {
+exports.module = http.createServer(function(req, res) {
 	var path = req.url=='/'?'/index.html':req.url;	
 	fs.stat(__dirname + path, function(err, stat) {
 	    if (!err) {
