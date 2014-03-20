@@ -1,47 +1,47 @@
-<!DOCTYPE>
+<!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Bonds.io</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-		<script src="../bonds.js"></script>
-		<link href="style.css" rel="stylesheet" />
-	</head>
-	<body>
-		<div id="content">
-			<div id="header">
-				<span><img src="http://f.cl.ly/items/2W1h0Q243x2g1S1w201E/logo.png"></span>
-				<span><input type="text" id="atoms" placeholder="Equation (e.g., C6H12)"></span>
-			</div>
-			<div id="view">
-				<canvas id="cvs" width="600" height="600"></canvas>
-			</div>		
-		</div>		
-		<script>
-			(function() {
-				var canvas = document.getElementById('cvs');
-				var drawMolecule = function(input) {
-					// reset canvas
-					canvas.width = canvas.width;
-				
-					// construct a molecule
-					var formula = new Formula(input);
-					var molecule = new Molecule(formula.atoms());
-					
-					// solve the molecule recursively
-					var solve;
-					molecule.solve(function(solution) {						
-						solve = solution;
-					});		
-					console.log("solved by "+solve.method);
+  <head>
+    <title>Bonds.io</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script src="bonds.js"></script>
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="content">
+      <div id="header">
+        <span><img alt="" src="http://f.cl.ly/items/2W1h0Q243x2g1S1w201E/logo.png"></span>
+        <span><input type="text" id="atoms" placeholder="Equation (e.g., C6H12)"></span>
+      </div>
+      <div id="view">
+        <canvas id="cvs" width="600" height="600"></canvas>
+      </div>    
+    </div>    
+    <script>
+      (function() {
+        var canvas = document.getElementById('cvs');
+        var drawMolecule = function(input) {
+          // reset canvas
+          canvas.width = canvas.width;
+        
+          // construct a molecule
+          var formula = new Formula(input);
+          var molecule = new Molecule(formula.atoms());
+          
+          // solve the molecule recursively
+          var solves = [];
+          molecule.solve(function(solution) {            
+	    solves.push(solution);
+          });    
+          console.log("solved by "+solves[0].method);
 
-					// make a tree of the bonds and render it
-					var tree = new Tree(solve), coords = tree.coordinates();					
-					tree.draw(canvas.getContext('2d'));	
-				};
-				document.getElementById('atoms').onchange = function() {
-					drawMolecule(this.value);
-				};
-			})();
-		</script>
-	</body>
+          // make a tree of the bonds and render it
+          var tree = new Tree(solves[0]), coords = tree.coordinates();          
+          tree.draw(canvas.getContext('2d'));  
+        };
+        document.getElementById('atoms').onchange = function() {
+          drawMolecule(this.value);
+        };
+      })();
+    </script>
+  </body>
 </html>
