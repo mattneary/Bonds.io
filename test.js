@@ -1,10 +1,11 @@
-var bonds = require('./src/bonds'),
-  Atom = bonds.Atom,
-  Molecule = bonds.Molecule,
-  Formula = bonds.Formula,
-  Context = bonds.Context,
-  Tree = bonds.Tree,
-  utils = bonds.utils;
+var util = require(__dirname + '/src/util.js'),
+  Atom = needs("Atom"),
+  Context = needs("Context"),
+  PolyatomicIon = needs("PolyatomicIon"),
+  Molecule = needs("Molecule"),
+  Tree = needs("Tree"),
+  Formula = needs("Formula"),
+  Ion = needs("Ion");
   
 var Timer = function() {
   var startTime;
@@ -51,12 +52,12 @@ var assert = function(assertion, fn) {
     var h = new Atom("H", 7),
       o = new Atom("O", 6);
   
-    var hs = utils.permutations(h, 2),
-      os = utils.permutations(o, 2);
+    var hs = permutations(h, 2),
+      os = permutations(o, 2);
       
     // take crossProduct and flatten result
-    var cross = utils.crossProduct(hs, os).reduce(utils.concat).map(utils.reducer(utils.concat));
-    return utils.flatEqual(cross.map(utils.mapper(utils.attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
+    var cross = crossProduct(hs, os).reduce(concat).map(reducer(concat));
+    return flatEqual(cross.map(mapper(attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
   });
   
   assert("Combining of multiple repeat elements", function() {
@@ -64,8 +65,8 @@ var assert = function(assertion, fn) {
       o = new Atom("O", 6);
   
     // map to permutations and reduce with combinations
-    var permute = [[h,2], [o, 2]].map(utils.permutations.apply.bind(utils.permutations, {})).reduce(utils.combinations);
-    return utils.flatEqual(permute.map(utils.mapper(utils.attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
+    var permute = [[h,2], [o, 2]].map(permutations.apply.bind(permutations, {})).reduce(combinations);
+    return flatEqual(permute.map(mapper(attr("number"))), [[6,6],[6,6,7],[6,6,7,7],[6],[6,7],[6,7,7],[],[7],[7,7]]);
   });
   
   assert("Molecule summary", function() {
@@ -73,7 +74,7 @@ var assert = function(assertion, fn) {
       o = new Atom("O", 6);
   
     var molecule = new Molecule([h, h, o]);
-    return utils.flatEqual(utils.listConstituents(molecule.atoms).map(utils.attr(1)), [2, 1]);
+    return flatEqual(listConstituents(molecule.atoms).map(attr(1)), [2, 1]);
   });
   
   assert("Sub-molecules", function() {
@@ -81,7 +82,7 @@ var assert = function(assertion, fn) {
       o = new Atom("O", 6);
   
     var molecule = new Molecule([h, h, o, o]);
-    return utils.flatEqual(molecule.subMolecules().map(utils.chain(utils.mapper(utils.attr("number")), utils.attr("atoms"))), [[6,6],[6,6,7],[6,6,7,7],[6,7],[6,7,7],[7,7]]);
+    return flatEqual(molecule.subMolecules().map(chain(mapper(attr("number")), attr("atoms"))), [[6,6],[6,6,7],[6,6,7,7],[6,7],[6,7,7],[7,7]]);
   });
   
   assert("Recognize R1, R2, and R3 neutralizable molecules", function() {
@@ -102,7 +103,7 @@ var assert = function(assertion, fn) {
   
     var molecule = new Molecule([c,c,h,h,h,h]);
     
-    return utils.flatEqual(molecule.R2Groups().map(function(group){ return group.R2Neutralizable(); }), ["R","C"]);
+    return flatEqual(molecule.R2Groups().map(function(group){ return group.R2Neutralizable(); }), ["R","C"]);
   });
   
   assert("Branch solving of molecule", function() {
@@ -163,7 +164,7 @@ var assert = function(assertion, fn) {
       return solve.filter(function(bond) {
         return bond[0][0] == 'H' || bond[1][0] == 'H';
       }).length;
-    }).filter(utils.isEqual(4)).length == 6;
+    }).filter(isEqual(4)).length == 6;
   });
   
   assert("Plotting of bonds and atoms", function() {
@@ -181,7 +182,7 @@ var assert = function(assertion, fn) {
     var coords = tree.coordinates();
     
     var elemOfCoord = function(coord) {
-      for( var k in coords ) if( utils.flatEqual(coord, coords[k]) ) return k;
+      for( var k in coords ) if( flatEqual(coord, coords[k]) ) return k;
       return "";
     };
     
@@ -202,9 +203,9 @@ var assert = function(assertion, fn) {
   assert("Build a molecule from formula", function() {
     var atoms = new Formula("C6H12O6").atoms();
     
-    var cs = atoms.map(utils.attr("name")).filter(utils.isEqual("C")),
-      hs = atoms.map(utils.attr("name")).filter(utils.isEqual("H")),
-      os = atoms.map(utils.attr("name")).filter(utils.isEqual("O"));
+    var cs = atoms.map(attr("name")).filter(isEqual("C")),
+      hs = atoms.map(attr("name")).filter(isEqual("H")),
+      os = atoms.map(attr("name")).filter(isEqual("O"));
     return cs.length == 6 && hs.length == 12 && os.length == 6;
   });
   
