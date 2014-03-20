@@ -1,4 +1,4 @@
-var bonds = require('./bonds'),
+var bonds = require('./src/bonds'),
 	Atom = bonds.Atom,
 	Molecule = bonds.Molecule,
 	Formula = bonds.Formula,
