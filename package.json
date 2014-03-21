@@ -1,0 +1,12 @@
+{
+  "name": "Bonds.io",
+  "version": "0.3.0",
+  "description": "Chemical bond-diagram drawer.",
+  "keywords": ["bonds", "diagram", "chemistry"],
+  "homepage": "http://bonds.io",
+  "email": "neary.matt@gmail.com",
+  "scripts": {
+    "test": "node test.js"
+  }
+}
+
