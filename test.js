@@ -16,14 +16,16 @@ var Timer = function() {
     return new Date().getTime() - startTime;
   };
 };
-var timer = new Timer();
-var assert = function(assertion, fn) {
+var timer = new Timer(), verbose = false;
+process.on('exit', function() { console.log("\nAll tests passed. Finishing."); });
+var assert = function(assertion, fn, verbose) {
   timer.start();
   var resp = fn();
   if( resp !== true ) {
-    console.error("\x1B[31mFailed\x1B[39m `"+assertion+"`!", JSON.stringify(resp));
+    throw new Error("\x1B[31mFailed\x1B[39m `"+assertion+"`!", JSON.stringify(resp));
   } else {
-    console.log("\x1B[32mPassed\x1B[39m `"+assertion+"` in "+timer.end()+" ms.");
+    if( verbose ) console.log("\x1B[32mPassed\x1B[39m `"+assertion+"` in "+timer.end()+" ms.");
+    process.stdout.write(".");
   }
 };
 
